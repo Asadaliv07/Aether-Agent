@@ -9,6 +9,8 @@ public struct MessageBubbleView: View {
     public let message: ChatMessage
     public let isHighlighted: Bool
     @State private var isHovering = false
+    @State private var isThoughtExpanded: Bool = false
+    @State private var isToolResponseExpanded: Bool = false
 
     public init(message: ChatMessage, isHighlighted: Bool = false) {
         self.message = message
@@ -96,11 +98,92 @@ public struct MessageBubbleView: View {
                     .background(Color(nsColor: .controlBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 } else {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(message.content)
-                            .font(.body)
-                            .foregroundStyle(.primary)
-                            .textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: 8) {
+                        if containsAgentTags {
+                            // 1. Thinking Process Block
+                            if let thought = parsedThought, !thought.isEmpty {
+                                DisclosureGroup(isExpanded: $isThoughtExpanded) {
+                                    Text(thought)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                        .textSelection(.enabled)
+                                        .padding(.top, 4)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                } label: {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: "brain")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(.purple)
+                                        Text("Reasoning Process")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(8)
+                                .background(Color.purple.opacity(0.06))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
+
+                            // 2. Tool Call Invocation Block
+                            if let call = parsedToolCall {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "wrench.and.screwdriver.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(Color.accentColor)
+                                    Text("Tool Executed: \(call.toolName)")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.primary)
+
+                                    if !call.parameters.isEmpty {
+                                        Text("(\(call.parameters.keys.sorted().joined(separator: ", ")))")
+                                            .font(.system(.caption2, design: .monospaced))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color.accentColor.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+
+                            // 3. Tool Result Block
+                            if let resp = parsedToolResponse {
+                                DisclosureGroup(isExpanded: $isToolResponseExpanded) {
+                                    Text(resp.body)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundStyle(.secondary)
+                                        .textSelection(.enabled)
+                                        .padding(.top, 4)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: resp.status == "success" ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                            .font(.system(size: 11))
+                                            .foregroundStyle(resp.status == "success" ? .green : .red)
+                                        Text("Tool Output (\(resp.name)): \(resp.status)")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .padding(8)
+                                .background(Color.secondary.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
+
+                            // 4. Conversational Text Body
+                            if !cleanConversationalText.isEmpty {
+                                Text(cleanConversationalText)
+                                    .font(.body)
+                                    .foregroundStyle(.primary)
+                                    .textSelection(.enabled)
+                            }
+                        } else {
+                            Text(message.content)
+                                .font(.body)
+                                .foregroundStyle(.primary)
+                                .textSelection(.enabled)
+                        }
 
                         if message.isStreaming {
                             HStack(spacing: 4) {
@@ -193,5 +276,67 @@ public struct MessageBubbleView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(message.content, forType: .string)
+    }
+
+    // MARK: - Agent Tag Decomposition
+
+    private var containsAgentTags: Bool {
+        message.content.contains("<thought>") ||
+        message.content.contains("<tool_call>") ||
+        message.content.contains("<tool_response")
+    }
+
+    private var parsedThought: String? {
+        guard let start = message.content.range(of: "<thought>"),
+              let end = message.content.range(of: "</thought>", range: start.upperBound..<message.content.endIndex) else {
+            return nil
+        }
+        return String(message.content[start.upperBound..<end.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var parsedToolCall: ToolCallInvocation? {
+        AgentOrchestrator.parseToolCall(from: message.content)
+    }
+
+    private var parsedToolResponse: (name: String, status: String, body: String)? {
+        guard let start = message.content.range(of: "<tool_response"),
+              let tagEnd = message.content.range(of: ">", range: start.upperBound..<message.content.endIndex),
+              let close = message.content.range(of: "</tool_response>", range: tagEnd.upperBound..<message.content.endIndex) else {
+            return nil
+        }
+        let tagHeader = String(message.content[start.upperBound..<tagEnd.lowerBound])
+        let body = String(message.content[tagEnd.upperBound..<close.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var name = "tool"
+        if let nameRange = tagHeader.range(of: "name=\"") {
+            let afterName = tagHeader[nameRange.upperBound...]
+            if let quote = afterName.firstIndex(of: "\"") {
+                name = String(afterName[..<quote])
+            }
+        }
+
+        var status = "success"
+        if let statRange = tagHeader.range(of: "status=\"") {
+            let afterStat = tagHeader[statRange.upperBound...]
+            if let quote = afterStat.firstIndex(of: "\"") {
+                status = String(afterStat[..<quote])
+            }
+        }
+
+        return (name, status, body)
+    }
+
+    private var cleanConversationalText: String {
+        var text = message.content
+        if let s = text.range(of: "<thought>"), let e = text.range(of: "</thought>", range: s.upperBound..<text.endIndex) {
+            text.removeSubrange(s.lowerBound..<e.upperBound)
+        }
+        if let s = text.range(of: "<tool_call>"), let e = text.range(of: "</tool_call>", range: s.upperBound..<text.endIndex) {
+            text.removeSubrange(s.lowerBound..<e.upperBound)
+        }
+        if let s = text.range(of: "<tool_response"), let e = text.range(of: "</tool_response>", range: s.upperBound..<text.endIndex) {
+            text.removeSubrange(s.lowerBound..<e.upperBound)
+        }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

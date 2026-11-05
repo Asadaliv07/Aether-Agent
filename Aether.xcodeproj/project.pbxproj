@@ -54,6 +54,16 @@
 		AE0000M420261019000000M4 /* HuggingFaceModelCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */; };
 		AE0000M520261019000000M5 /* HuggingFaceCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */; };
 		AE0000M620261019000000M6 /* ModelDownloadManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */; };
+		AE0000Q120261105000000Q1 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N120261105000000N1 /* Tool.swift */; };
+		AE0000Q220261105000000Q2 /* ToolSecurityGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N220261105000000N2 /* ToolSecurityGuard.swift */; };
+		AE0000Q320261105000000Q3 /* ToolAuditLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N320261105000000N3 /* ToolAuditLogger.swift */; };
+		AE0000Q420261105000000Q4 /* ToolRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N420261105000000N4 /* ToolRegistry.swift */; };
+		AE0000Q520261105000000Q5 /* NativeTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N520261105000000N5 /* NativeTools.swift */; };
+		AE0000Q620261105000000Q6 /* AgentOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N620261105000000N6 /* AgentOrchestrator.swift */; };
+		AE0000R120261105000000R1 /* ToolExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P120261105000000P1 /* ToolExecutionTests.swift */; };
+		AE0000R220261105000000R2 /* ToolSecurityGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */; };
+		AE0000R320261105000000R3 /* NativeToolsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P320261105000000P3 /* NativeToolsTests.swift */; };
+		AE0000R420261105000000R4 /* AgentOrchestratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -133,6 +143,16 @@
 		AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceModelCardView.swift; sourceTree = "<group>"; };
 		AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceCatalogTests.swift; sourceTree = "<group>"; };
 		AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadManagerTests.swift; sourceTree = "<group>"; };
+		AE0000N120261105000000N1 /* Tool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tool.swift; sourceTree = "<group>"; };
+		AE0000N220261105000000N2 /* ToolSecurityGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolSecurityGuard.swift; sourceTree = "<group>"; };
+		AE0000N320261105000000N3 /* ToolAuditLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolAuditLogger.swift; sourceTree = "<group>"; };
+		AE0000N420261105000000N4 /* ToolRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolRegistry.swift; sourceTree = "<group>"; };
+		AE0000N520261105000000N5 /* NativeTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTools.swift; sourceTree = "<group>"; };
+		AE0000N620261105000000N6 /* AgentOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestrator.swift; sourceTree = "<group>"; };
+		AE0000P120261105000000P1 /* ToolExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolExecutionTests.swift; sourceTree = "<group>"; };
+		AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolSecurityGuardTests.swift; sourceTree = "<group>"; };
+		AE0000P320261105000000P3 /* NativeToolsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeToolsTests.swift; sourceTree = "<group>"; };
+		AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestratorTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,8 +210,22 @@
 				AE00000B202610180000000B /* Inference */,
 				AE0000CA20261018000000CA /* Persistence */,
 				AE0000EA20261019000000EA /* ModelLibrary */,
+				AE0000NA20261105000000NA /* Agent */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		AE0000NA20261105000000NA /* Agent */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000N120261105000000N1 /* Tool.swift */,
+				AE0000N220261105000000N2 /* ToolSecurityGuard.swift */,
+				AE0000N320261105000000N3 /* ToolAuditLogger.swift */,
+				AE0000N420261105000000N4 /* ToolRegistry.swift */,
+				AE0000N520261105000000N5 /* NativeTools.swift */,
+				AE0000N620261105000000N6 /* AgentOrchestrator.swift */,
+			);
+			path = Agent;
 			sourceTree = "<group>";
 		};
 		AE0000EA20261019000000EA /* ModelLibrary */ = {
@@ -320,6 +354,10 @@
 				AE0000J220261019000000J2 /* StreamingStopFilterTests.swift */,
 				AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */,
 				AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */,
+				AE0000P120261105000000P1 /* ToolExecutionTests.swift */,
+				AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */,
+				AE0000P320261105000000P3 /* NativeToolsTests.swift */,
+				AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -449,6 +487,12 @@
 				AE0000M220261019000000M2 /* HuggingFaceCatalogService.swift in Sources */,
 				AE0000M320261019000000M3 /* ModelDownloadManager.swift in Sources */,
 				AE0000M420261019000000M4 /* HuggingFaceModelCardView.swift in Sources */,
+				AE0000Q120261105000000Q1 /* Tool.swift in Sources */,
+				AE0000Q220261105000000Q2 /* ToolSecurityGuard.swift in Sources */,
+				AE0000Q320261105000000Q3 /* ToolAuditLogger.swift in Sources */,
+				AE0000Q420261105000000Q4 /* ToolRegistry.swift in Sources */,
+				AE0000Q520261105000000Q5 /* NativeTools.swift in Sources */,
+				AE0000Q620261105000000Q6 /* AgentOrchestrator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -466,6 +510,10 @@
 				AE0000K220261019000000K2 /* StreamingStopFilterTests.swift in Sources */,
 				AE0000M520261019000000M5 /* HuggingFaceCatalogTests.swift in Sources */,
 				AE0000M620261019000000M6 /* ModelDownloadManagerTests.swift in Sources */,
+				AE0000R120261105000000R1 /* ToolExecutionTests.swift in Sources */,
+				AE0000R220261105000000R2 /* ToolSecurityGuardTests.swift in Sources */,
+				AE0000R320261105000000R3 /* NativeToolsTests.swift in Sources */,
+				AE0000R420261105000000R4 /* AgentOrchestratorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

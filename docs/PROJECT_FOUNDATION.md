@@ -169,14 +169,33 @@ The Phase 3.1 foundation was empirically validated using the local macOS 27.0 / 
 
 ---
 
-## 9. Known Limitations & Prerequisites for Phase 3.2
+## 9. Evolution to Phase 4: Advanced Agent Capabilities & Tool Execution
 
-### 9.1 Known Limitations of Phase 3.1
-- The application currently displays the verification shell. It cannot perform AI inference, load GGUF weights, persist messages, or connect to external tools.
-- Network access is disabled at the sandbox boundary.
+Phase 4 advances the foundation into a fully capable local autonomous agent:
+- **`Aether/Sources/Agent/`**:
+  - `Tool.swift`: `Tool` protocol, parameter schemas, JSON Schema generation.
+  - `ToolSecurityGuard.swift`: Path traversal detection, prompt injection defense, interactive approval continuations.
+  - `ToolAuditLogger.swift`: Privacy-preserving tool audit logging with secret redaction.
+  - `ToolRegistry.swift`: Tool registration, schema generation, timeout watchdog racing, and cancellation.
+  - `NativeTools.swift`: Native macOS tools (`SystemInfoTool`, `SandboxedFileReaderTool`, `DocumentTextExtractorTool`, `SafeCalculatorTool`, `SystemNotificationTool`).
+  - `AgentOrchestrator.swift`: Multi-step reasoning parser (`<thought>`, `<tool_call>`, `<tool_response>`).
+- **UI Integration**:
+  - `ChatViewModel.swift`: Agent loop orchestration with interactive confirmation continuations.
+  - `ChatView.swift`: Agent Mode toggle chip, active tool telemetry capsule, and `ToolConfirmationDialog` sheet.
+  - `MessageBubbleView.swift`: Decomposed thought disclosures, tool invocation cards, and result viewers.
+- **Verification**: 239 automated unit & integration tests passing across all components.
 
-### 9.2 Prerequisites for Phase 3.2 (Inference Backend Integration)
-Before Milestone 3.2 can be authorized:
-1. User authorization for Phase 3.2.
-2. Selection of `llama.cpp` upstream release tag (e.g., `b3800`+) to vendor into the internal SPM target (`LlamaCore`).
-3. Confirmation of Metal compute shader compilation configuration for Apple Silicon.
+---
+
+## 10. Known Limitations & Prerequisites for Future Milestones
+
+### 10.1 Active Capabilities (Phase 4 Verified)
+- Local Metal LLM inference via `llama.xcframework`.
+- Hugging Face GGUF catalog and download manager.
+- Secure tool execution with user consent workflows.
+- Native macOS system telemetry, sandboxed file inspection, calculation, and notifications.
+
+### 10.2 Next Steps (Phase 4.1+)
+1. Persistent user permission profiles stored securely in macOS Keychain.
+2. Streaming tool outputs for long-running workflows.
+3. Local semantic document search via on-device embeddings and vector storage.

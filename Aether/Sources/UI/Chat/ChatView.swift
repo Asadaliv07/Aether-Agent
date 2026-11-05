@@ -73,6 +73,14 @@ public struct ChatView: View {
         .sheet(isPresented: $viewModel.showModelLibrary) {
             ModelLibraryView(viewModel: viewModel, isPresented: $viewModel.showModelLibrary)
         }
+        .sheet(isPresented: Binding(
+            get: { viewModel.pendingConfirmationRequest != nil },
+            set: { if !$0 { viewModel.rejectPendingToolExecution() } }
+        )) {
+            if let req = viewModel.pendingConfirmationRequest {
+                ToolConfirmationDialog(request: req, viewModel: viewModel)
+            }
+        }
     }
 
     // MARK: - Header
@@ -136,6 +144,40 @@ public struct ChatView: View {
                 GenerationSettingsPopover(viewModel: viewModel)
             }
             .help("Generation Parameters & System Instructions")
+
+            // Active Tool Execution Telemetry
+            if let activeTool = viewModel.activeToolExecutionName {
+                HStack(spacing: 5) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Running: \(activeTool)")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Color.accentColor)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.accentColor.opacity(0.12))
+                .clipShape(Capsule())
+            }
+
+            // Agent Mode Toggle
+            Button(action: {
+                viewModel.isAgentModeEnabled.toggle()
+            }) {
+                HStack(spacing: 4) {
+                    Image(systemName: viewModel.isAgentModeEnabled ? "wrench.and.screwdriver.fill" : "wrench.and.screwdriver")
+                        .font(.system(size: 10))
+                    Text(viewModel.isAgentModeEnabled ? "Agent Mode" : "Direct Mode")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(viewModel.isAgentModeEnabled ? Color.accentColor.opacity(0.15) : Color.secondary.opacity(0.1))
+                .foregroundStyle(viewModel.isAgentModeEnabled ? Color.accentColor : Color.secondary)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .help(viewModel.isAgentModeEnabled ? "Agent Mode enabled: Model can invoke tools and inspect system" : "Agent Mode disabled: Model responds with direct text only")
 
             modelHeaderSelector
         }
@@ -639,6 +681,121 @@ public struct GenerationSettingsPopover: View {
         guard index >= 0 && index < tempStopSequences.count else { return }
         tempStopSequences.remove(at: index)
         validationError = nil
+    }
+}
+
+// MARK: - Interactive Tool Authorization Dialog
+
+public struct ToolConfirmationDialog: View {
+    public let request: ToolConfirmationRequest
+    public let viewModel: ChatViewModel
+    @State private var rememberForSession: Bool = false
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "shield.lefthalf.filled.trianglebadge.exclamationmark")
+                    .font(.system(size: 28))
+                    .foregroundStyle(.orange)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Tool Authorization Requested")
+                        .font(.headline)
+                    Text("The model is requesting permission to execute an operation.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Tool Name:")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(width: 100, alignment: .leading)
+                    Text(request.toolName)
+                        .font(.system(.subheadline, design: .monospaced).weight(.bold))
+                    Spacer()
+                    Text(request.permissionLevel.rawValue)
+                        .font(.caption.weight(.medium))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.orange.opacity(0.15))
+                        .foregroundStyle(.orange)
+                        .clipShape(Capsule())
+                }
+
+                HStack(alignment: .top) {
+                    Text("Description:")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(width: 100, alignment: .leading)
+                    Text(request.description)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+
+                if !request.parameters.isEmpty {
+                    Text("Parameters:")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.top, 4)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(request.parameters.keys.sorted(), id: \.self) { key in
+                            HStack {
+                                Text("\(key):")
+                                    .font(.system(.caption, design: .monospaced).weight(.medium))
+                                    .foregroundStyle(.secondary)
+                                Text(request.parameters[key] ?? "")
+                                    .font(.system(.caption, design: .monospaced))
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+
+                HStack(alignment: .top, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    Text(request.riskSummary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 4)
+            }
+
+            Divider()
+
+            if request.permissionLevel != .restricted {
+                Toggle("Always allow this tool for the rest of this chat session", isOn: $rememberForSession)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack {
+                Button("Deny") {
+                    viewModel.rejectPendingToolExecution()
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Spacer()
+
+                Button("Allow Operation") {
+                    Task {
+                        await viewModel.approvePendingToolExecution(rememberForSession: rememberForSession)
+                    }
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(20)
+        .frame(width: 480)
     }
 }
 

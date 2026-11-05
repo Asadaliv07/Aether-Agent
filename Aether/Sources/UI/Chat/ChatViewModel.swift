@@ -80,6 +80,16 @@ public final class ChatViewModel {
     public private(set) var repoMetadataLoading: Set<String> = []
     public private(set) var repoMetadataErrors: [String: String] = [:]
 
+    // MARK: - Agent Mode & Tool Execution State
+    public var isAgentModeEnabled: Bool = true
+    public private(set) var pendingConfirmationRequest: ToolConfirmationRequest?
+    public private(set) var activeToolExecutionName: String?
+    public private(set) var lastToolExecutionResult: ToolExecutionResult?
+
+    public let toolRegistry: ToolRegistry
+    public let agentOrchestrator: AgentOrchestrator
+    private var pendingToolContinuation: CheckedContinuation<Bool, Never>?
+
     // MARK: - Dependencies & Private Trackers
 
     public let inferenceService: InferenceService
@@ -101,7 +111,9 @@ public final class ChatViewModel {
         database: ConversationDatabase,
         modelLibraryService: ModelLibraryService? = nil,
         catalogService: HuggingFaceCatalogServiceProtocol? = nil,
-        downloadManager: ModelDownloadManager? = nil
+        downloadManager: ModelDownloadManager? = nil,
+        toolRegistry: ToolRegistry? = nil,
+        agentOrchestrator: AgentOrchestrator? = nil
     ) {
         self.inferenceService = inferenceService
         self.database = database
@@ -109,6 +121,10 @@ public final class ChatViewModel {
         self.modelLibraryService = libService
         self.catalogService = catalogService ?? HuggingFaceCatalogService()
         self.downloadManager = downloadManager ?? ModelDownloadManager(database: database, modelLibraryService: libService)
+
+        let reg = toolRegistry ?? ToolRegistry()
+        self.toolRegistry = reg
+        self.agentOrchestrator = agentOrchestrator ?? AgentOrchestrator(registry: reg)
     }
 
     /// Bootstraps the view model, synchronizes the database, and listens for inference state transitions.
@@ -137,8 +153,33 @@ public final class ChatViewModel {
             }
         }
 
-        // 5. Start state observer
+        // 5. Register native agent tools
+        await toolRegistry.register(SystemInfoTool())
+        await toolRegistry.register(SafeCalculatorTool())
+        await toolRegistry.register(SandboxedFileReaderTool(securityGuard: toolRegistry.securityGuard))
+        await toolRegistry.register(DocumentTextExtractorTool(securityGuard: toolRegistry.securityGuard))
+        await toolRegistry.register(SystemNotificationTool())
+
+        // 6. Start state observer
         await setupStateObserver()
+    }
+
+    // MARK: - Agent Tool Confirmation Handling
+
+    public func approvePendingToolExecution(rememberForSession: Bool = false) async {
+        guard let request = pendingConfirmationRequest else { return }
+        if rememberForSession, let convId = selectedConversationId {
+            await toolRegistry.securityGuard.grantSessionPermission(conversationId: convId, toolName: request.toolName)
+        }
+        pendingConfirmationRequest = nil
+        pendingToolContinuation?.resume(returning: true)
+        pendingToolContinuation = nil
+    }
+
+    public func rejectPendingToolExecution() {
+        pendingConfirmationRequest = nil
+        pendingToolContinuation?.resume(returning: false)
+        pendingToolContinuation = nil
     }
 
     private func setupStateObserver() async {
@@ -423,7 +464,11 @@ public final class ChatViewModel {
         // 3. Assemble multi-turn conversation context
         var promptMessages: [PromptMessage] = []
         let currentConv = conversations.first(where: { $0.id == conversationId })
-        if let sysPrompt = currentConv?.systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines),
+        var effectiveSystemPrompt: String? = currentConv?.systemPrompt
+        if isAgentModeEnabled {
+            effectiveSystemPrompt = await agentOrchestrator.buildSystemPrompt(baseSystemPrompt: effectiveSystemPrompt)
+        }
+        if let sysPrompt = effectiveSystemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines),
            !sysPrompt.isEmpty {
             promptMessages.append(PromptMessage(role: .system, content: sysPrompt))
         }
@@ -586,6 +631,159 @@ public final class ChatViewModel {
             }
         }
 
+        // 7. Check if Assistant output requested a Tool Call
+        if isAgentModeEnabled, let invocation = AgentOrchestrator.parseToolCall(from: accumulatedText) {
+            await handleAgentToolExecution(
+                invocation: invocation,
+                assistantMessageId: assistantMessageId,
+                conversationId: conversationId,
+                promptMessages: promptMessages,
+                config: config,
+                accumulatedText: accumulatedText
+            )
+            return
+        }
+
+        self.isGenerating = false
+        self.activeGenerationConversationId = nil
+        self.activeStream = nil
+    }
+
+    private func handleAgentToolExecution(
+        invocation: ToolCallInvocation,
+        assistantMessageId: UUID,
+        conversationId: UUID,
+        promptMessages: [PromptMessage],
+        config: GenerationConfiguration,
+        accumulatedText: String
+    ) async {
+        self.activeToolExecutionName = invocation.toolName
+
+        // 1. Initial authorization check
+        var (decision, stepResult) = await agentOrchestrator.executeToolStep(
+            invocation: invocation,
+            conversationId: conversationId,
+            isInteractiveApprovalGranted: false
+        )
+
+        // 2. Interactive confirmation handling
+        if case .requiresUserConfirmation(let request) = decision {
+            self.pendingConfirmationRequest = request
+
+            let approved = await withCheckedContinuation { continuation in
+                self.pendingToolContinuation = continuation
+            }
+
+            if approved {
+                let (authDec, approvedRes) = await agentOrchestrator.executeToolStep(
+                    invocation: invocation,
+                    conversationId: conversationId,
+                    isInteractiveApprovalGranted: true
+                )
+                decision = authDec
+                stepResult = approvedRes
+            } else {
+                stepResult = ToolExecutionResult.rejected(toolName: invocation.toolName, reason: "User declined execution.")
+            }
+        }
+
+        self.activeToolExecutionName = nil
+        guard let finalResult = stepResult else { return }
+        self.lastToolExecutionResult = finalResult
+
+        // 3. Format tool response string
+        let toolResponseString = AgentOrchestrator.formatToolResponse(result: finalResult)
+
+        // 4. Update the prior message in UI and database with combined thought & tool output
+        let combinedContent = accumulatedText + "\n\n" + toolResponseString
+        try? await database.updateMessageContentAndStatus(
+            id: assistantMessageId,
+            content: combinedContent,
+            status: .completed,
+            tokenCount: 0
+        )
+        if self.selectedConversationId == conversationId,
+           let idx = self.messages.firstIndex(where: { $0.id == assistantMessageId }) {
+            self.messages[idx].content = combinedContent
+            self.messages[idx].status = .completed
+        }
+
+        // 5. Construct follow-up prompt messages including the tool response
+        var nextMessages = promptMessages
+        nextMessages.append(PromptMessage(role: .assistant, content: accumulatedText))
+        nextMessages.append(PromptMessage(role: .user, content: toolResponseString))
+
+        // 6. Create placeholder message for the final synthesized answer
+        let finalMessageId = UUID()
+        let finalMessage = ChatMessage(
+            id: finalMessageId,
+            conversationId: conversationId,
+            role: .assistant,
+            content: "",
+            status: .streaming
+        )
+        self.messages.append(finalMessage)
+        try? await database.insertMessage(finalMessage.toRecord())
+
+        // 7. Stream the final response
+        let finalStream: InferenceStream
+        let startTime = ContinuousClock.now
+        do {
+            finalStream = try await inferenceService.generate(messages: nextMessages, configuration: config)
+            self.activeStream = finalStream
+        } catch {
+            self.isGenerating = false
+            self.activeGenerationConversationId = nil
+            self.activeStream = nil
+            markAssistantMessageFailed(id: finalMessageId, errorDescription: error.localizedDescription)
+            return
+        }
+
+        var finalAccumulated = ""
+        var finalTokens = 0
+        do {
+            for try await tokenPiece in finalStream {
+                finalAccumulated.append(tokenPiece)
+                finalTokens += 1
+
+                if self.selectedConversationId == conversationId,
+                   let idx = self.messages.firstIndex(where: { $0.id == finalMessageId }) {
+                    self.messages[idx].content = finalAccumulated
+                    self.messages[idx].tokenCount = finalTokens
+                }
+            }
+
+            let dur = startTime.duration(to: .now)
+            let secs = Double(dur.components.seconds) + Double(dur.components.attoseconds) / 1e18
+            self.lastGenerationDurationSeconds = secs
+            self.lastTokensPerSecond = secs > 0 ? Double(finalTokens) / secs : nil
+
+            try? await database.updateMessageContentAndStatus(
+                id: finalMessageId,
+                content: finalAccumulated,
+                status: .completed,
+                tokenCount: finalTokens
+            )
+
+            if self.selectedConversationId == conversationId,
+               let idx = self.messages.firstIndex(where: { $0.id == finalMessageId }) {
+                self.messages[idx].content = finalAccumulated
+                self.messages[idx].status = .completed
+                self.messages[idx].tokenCount = finalTokens
+            }
+        } catch {
+            try? await database.updateMessageContentAndStatus(
+                id: finalMessageId,
+                content: finalAccumulated.isEmpty ? "Error: \(error.localizedDescription)" : finalAccumulated,
+                status: .failed,
+                tokenCount: finalTokens
+            )
+            if self.selectedConversationId == conversationId,
+               let idx = self.messages.firstIndex(where: { $0.id == finalMessageId }) {
+                self.messages[idx].status = .failed
+            }
+        }
+
         self.isGenerating = false
         self.activeGenerationConversationId = nil
         self.activeStream = nil
@@ -638,6 +836,12 @@ public final class ChatViewModel {
 
         // 2. Mandatory synchronization barrier: await full native worker termination
         await stream.waitForTermination()
+
+        if let cont = pendingToolContinuation {
+            pendingConfirmationRequest = nil
+            pendingToolContinuation = nil
+            cont.resume(returning: false)
+        }
 
         self.isGenerating = false
         self.activeGenerationConversationId = nil
