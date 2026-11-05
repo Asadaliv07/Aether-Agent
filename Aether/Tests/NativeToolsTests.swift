@@ -134,3 +134,4 @@ final class NativeToolsTests: XCTestCase {
         XCTAssertTrue(resultMD.output.contains("# Architectural Overview"))
     }
 }
+

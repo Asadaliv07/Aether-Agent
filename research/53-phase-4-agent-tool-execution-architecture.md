@@ -235,3 +235,4 @@ Four dedicated test suites were implemented:
 1. **Persistent Permission Profiles:** Allow per-folder read authorizations stored securely in the macOS Keychain.
 2. **Streaming Tool Output:** Support partial/streaming tool results for long-running document analysis tasks.
 3. **Vector Store Integration:** Integrate SQLite `sqlite-vec` or Apple Accelerate vector embeddings for local semantic file retrieval.
+

@@ -215,3 +215,4 @@ public protocol Tool: Sendable {
     var definition: ToolDefinition { get }
     func execute(parameters: [String: String], context: ToolExecutionContext) async throws -> ToolExecutionResult
 }
+

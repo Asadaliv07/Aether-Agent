@@ -40,3 +40,8 @@ reference-repos/
 *.secret
 *.key
 
+# Distribution & Packaging
+dist/
+*.dmg
+*.dmg.sha256
+
