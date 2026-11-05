@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/tmp/aether-llama-build/stage/llama.framework/Versions/A/llama'
+relocations:     []
+...

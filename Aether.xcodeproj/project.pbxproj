@@ -1,0 +1,749 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AE0000212026101800000021 /* AetherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000112026101800000011 /* AetherApp.swift */; };
+		AE0000222026101800000022 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000122026101800000012 /* ContentView.swift */; };
+		AE0000232026101800000023 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000132026101800000013 /* AppState.swift */; };
+		AE0000242026101800000024 /* FoundationBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000142026101800000014 /* FoundationBadge.swift */; };
+		AE0000252026101800000025 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AE0000152026101800000015 /* Assets.xcassets */; };
+		AE0000262026101800000026 /* llama.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE0000182026101800000018 /* llama.xcframework */; };
+		AE0000272026101800000027 /* llama.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AE0000182026101800000018 /* llama.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AE0000282026101800000028 /* InferenceState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000192026101800000019 /* InferenceState.swift */; };
+		AE0000292026101800000029 /* InferenceError.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE00001A202610180000001A /* InferenceError.swift */; };
+		AE00002A202610180000002A /* InferenceWorkerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE00001B202610180000001B /* InferenceWorkerProtocol.swift */; };
+		AE00002B202610180000002B /* LlamaInferenceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE00001C202610180000001C /* LlamaInferenceWorker.swift */; };
+		AE00002C202610180000002C /* InferenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE00001D202610180000001D /* InferenceService.swift */; };
+		AE0000B120261018000000B1 /* AetherAtomic.c in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A220261018000000A2 /* AetherAtomic.c */; };
+		AE0000B220261018000000B2 /* CancellationSignal.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A420261018000000A4 /* CancellationSignal.swift */; };
+		AE0000B320261018000000B3 /* GenerationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A520261018000000A5 /* GenerationConfiguration.swift */; };
+		AE0000B420261018000000B4 /* GenerationEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A620261018000000A6 /* GenerationEvent.swift */; };
+		AE0000B620261018000000B6 /* UTF8Buffer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A820261018000000A8 /* UTF8Buffer.swift */; };
+		AE0000622026101800000062 /* InferenceLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000612026101800000061 /* InferenceLifecycleTests.swift */; };
+		AE0000B520261018000000B5 /* InferenceGenerationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000A720261018000000A7 /* InferenceGenerationTests.swift */; };
+		AE0000D120261018000000D1 /* PersistenceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C120261018000000C1 /* PersistenceModels.swift */; };
+		AE0000D220261018000000D2 /* ConversationDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C220261018000000C2 /* ConversationDatabase.swift */; };
+		AE0000D320261018000000D3 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C320261018000000C3 /* ChatMessage.swift */; };
+		AE0000D420261018000000D4 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C420261018000000C4 /* ChatViewModel.swift */; };
+		AE0000D520261018000000D5 /* MessageBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C520261018000000C5 /* MessageBubbleView.swift */; };
+		AE0000D620261018000000D6 /* ConversationSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C620261018000000C6 /* ConversationSidebarView.swift */; };
+		AE0000D720261018000000D7 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C720261018000000C7 /* ChatView.swift */; };
+		AE0000D820261018000000D8 /* ConversationDatabaseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C820261018000000C8 /* ConversationDatabaseTests.swift */; };
+		AE0000D920261018000000D9 /* ChatViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000C920261018000000C9 /* ChatViewModelTests.swift */; };
+		AE0000F120261019000000F1 /* ModelRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E120261019000000E1 /* ModelRecord.swift */; };
+		AE0000F220261019000000F2 /* GGUFMetadataReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E220261019000000E2 /* GGUFMetadataReader.swift */; };
+		AE0000F320261019000000F3 /* ModelLibraryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E320261019000000E3 /* ModelLibraryService.swift */; };
+		AE0000F420261019000000F4 /* ModelCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E420261019000000E4 /* ModelCardView.swift */; };
+		AE0000F520261019000000F5 /* ModelLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E520261019000000E5 /* ModelLibraryView.swift */; };
+		AE0000F620261019000000F6 /* ModelLibraryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000E620261019000000E6 /* ModelLibraryTests.swift */; };
+		AE0000H120261019000000H1 /* PromptMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000G120261019000000G1 /* PromptMessage.swift */; };
+		AE0000H220261019000000H2 /* ChatTemplateFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000G220261019000000G2 /* ChatTemplateFormatter.swift */; };
+		AE0000H320261019000000H3 /* ContextBudgeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000G320261019000000G3 /* ContextBudgeter.swift */; };
+		AE0000H420261019000000H4 /* ChatTemplateFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000G420261019000000G4 /* ChatTemplateFormatterTests.swift */; };
+		AE0000H520261019000000H5 /* ContextBudgeterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000G520261019000000G5 /* ContextBudgeterTests.swift */; };
+		AE0000K120261019000000K1 /* StreamingStopFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000J120261019000000J1 /* StreamingStopFilter.swift */; };
+		AE0000K220261019000000K2 /* StreamingStopFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000J220261019000000J2 /* StreamingStopFilterTests.swift */; };
+		AE0000M120261019000000M1 /* HuggingFaceCatalogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L120261019000000L1 /* HuggingFaceCatalogModels.swift */; };
+		AE0000M220261019000000M2 /* HuggingFaceCatalogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L220261019000000L2 /* HuggingFaceCatalogService.swift */; };
+		AE0000M320261019000000M3 /* ModelDownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L320261019000000L3 /* ModelDownloadManager.swift */; };
+		AE0000M420261019000000M4 /* HuggingFaceModelCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */; };
+		AE0000M520261019000000M5 /* HuggingFaceCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */; };
+		AE0000M620261019000000M6 /* ModelDownloadManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AE0000912026101800000091 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AE0000012026101800000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AE0000302026101800000030;
+			remoteInfo = Aether;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AE0000342026101800000034 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AE0000272026101800000027 /* llama.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AE0000102026101800000010 /* Aether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aether.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000112026101800000011 /* AetherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AetherApp.swift; sourceTree = "<group>"; };
+		AE0000122026101800000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AE0000132026101800000013 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		AE0000142026101800000014 /* FoundationBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoundationBadge.swift; sourceTree = "<group>"; };
+		AE0000152026101800000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AE0000162026101800000016 /* Aether.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Aether.entitlements; sourceTree = "<group>"; };
+		AE0000172026101800000017 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AE0000182026101800000018 /* llama.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = llama.xcframework; sourceTree = "<group>"; };
+		AE0000192026101800000019 /* InferenceState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceState.swift; sourceTree = "<group>"; };
+		AE00001A202610180000001A /* InferenceError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceError.swift; sourceTree = "<group>"; };
+		AE00001B202610180000001B /* InferenceWorkerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceWorkerProtocol.swift; sourceTree = "<group>"; };
+		AE00001C202610180000001C /* LlamaInferenceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LlamaInferenceWorker.swift; sourceTree = "<group>"; };
+		AE00001D202610180000001D /* InferenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceService.swift; sourceTree = "<group>"; };
+		AE0000A120261018000000A1 /* AetherAtomic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AetherAtomic.h; sourceTree = "<group>"; };
+		AE0000A220261018000000A2 /* AetherAtomic.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = AetherAtomic.c; sourceTree = "<group>"; };
+		AE0000A320261018000000A3 /* Aether-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Aether-Bridging-Header.h"; sourceTree = "<group>"; };
+		AE0000A420261018000000A4 /* CancellationSignal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CancellationSignal.swift; sourceTree = "<group>"; };
+		AE0000A520261018000000A5 /* GenerationConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationConfiguration.swift; sourceTree = "<group>"; };
+		AE0000A620261018000000A6 /* GenerationEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationEvent.swift; sourceTree = "<group>"; };
+		AE0000A820261018000000A8 /* UTF8Buffer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UTF8Buffer.swift; sourceTree = "<group>"; };
+		AE0000602026101800000060 /* AetherTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AetherTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AE0000612026101800000061 /* InferenceLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceLifecycleTests.swift; sourceTree = "<group>"; };
+		AE0000A720261018000000A7 /* InferenceGenerationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InferenceGenerationTests.swift; sourceTree = "<group>"; };
+		AE0000C120261018000000C1 /* PersistenceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceModels.swift; sourceTree = "<group>"; };
+		AE0000C220261018000000C2 /* ConversationDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationDatabase.swift; sourceTree = "<group>"; };
+		AE0000C320261018000000C3 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		AE0000C420261018000000C4 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		AE0000C520261018000000C5 /* MessageBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleView.swift; sourceTree = "<group>"; };
+		AE0000C620261018000000C6 /* ConversationSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationSidebarView.swift; sourceTree = "<group>"; };
+		AE0000C720261018000000C7 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		AE0000C820261018000000C8 /* ConversationDatabaseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationDatabaseTests.swift; sourceTree = "<group>"; };
+		AE0000C920261018000000C9 /* ChatViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModelTests.swift; sourceTree = "<group>"; };
+		AE0000E120261019000000E1 /* ModelRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelRecord.swift; sourceTree = "<group>"; };
+		AE0000E220261019000000E2 /* GGUFMetadataReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GGUFMetadataReader.swift; sourceTree = "<group>"; };
+		AE0000E320261019000000E3 /* ModelLibraryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLibraryService.swift; sourceTree = "<group>"; };
+		AE0000E420261019000000E4 /* ModelCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCardView.swift; sourceTree = "<group>"; };
+		AE0000E520261019000000E5 /* ModelLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLibraryView.swift; sourceTree = "<group>"; };
+		AE0000E620261019000000E6 /* ModelLibraryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLibraryTests.swift; sourceTree = "<group>"; };
+		AE0000G120261019000000G1 /* PromptMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptMessage.swift; sourceTree = "<group>"; };
+		AE0000G220261019000000G2 /* ChatTemplateFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTemplateFormatter.swift; sourceTree = "<group>"; };
+		AE0000G320261019000000G3 /* ContextBudgeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextBudgeter.swift; sourceTree = "<group>"; };
+		AE0000G420261019000000G4 /* ChatTemplateFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTemplateFormatterTests.swift; sourceTree = "<group>"; };
+		AE0000G520261019000000G5 /* ContextBudgeterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextBudgeterTests.swift; sourceTree = "<group>"; };
+		AE0000J120261019000000J1 /* StreamingStopFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingStopFilter.swift; sourceTree = "<group>"; };
+		AE0000J220261019000000J2 /* StreamingStopFilterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamingStopFilterTests.swift; sourceTree = "<group>"; };
+		AE0000L120261019000000L1 /* HuggingFaceCatalogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceCatalogModels.swift; sourceTree = "<group>"; };
+		AE0000L220261019000000L2 /* HuggingFaceCatalogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceCatalogService.swift; sourceTree = "<group>"; };
+		AE0000L320261019000000L3 /* ModelDownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadManager.swift; sourceTree = "<group>"; };
+		AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceModelCardView.swift; sourceTree = "<group>"; };
+		AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HuggingFaceCatalogTests.swift; sourceTree = "<group>"; };
+		AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadManagerTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AE0000322026101800000032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE0000262026101800000026 /* llama.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000722026101800000072 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AE0000022026101800000002 = {
+			isa = PBXGroup;
+			children = (
+				AE0000042026101800000004 /* Aether */,
+				AE0000032026101800000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AE0000032026101800000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000102026101800000010 /* Aether.app */,
+				AE0000602026101800000060 /* AetherTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AE0000042026101800000004 /* Aether */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000052026101800000005 /* Sources */,
+				AE00000A202610180000000A /* Frameworks */,
+				AE0000082026101800000008 /* Resources */,
+				AE0000632026101800000063 /* Tests */,
+			);
+			path = Aether;
+			sourceTree = "<group>";
+		};
+		AE0000052026101800000005 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000062026101800000006 /* App */,
+				AE0000072026101800000007 /* UI */,
+				AE00000B202610180000000B /* Inference */,
+				AE0000CA20261018000000CA /* Persistence */,
+				AE0000EA20261019000000EA /* ModelLibrary */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		AE0000EA20261019000000EA /* ModelLibrary */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000E120261019000000E1 /* ModelRecord.swift */,
+				AE0000E220261019000000E2 /* GGUFMetadataReader.swift */,
+				AE0000E320261019000000E3 /* ModelLibraryService.swift */,
+				AE0000L120261019000000L1 /* HuggingFaceCatalogModels.swift */,
+				AE0000L220261019000000L2 /* HuggingFaceCatalogService.swift */,
+				AE0000L320261019000000L3 /* ModelDownloadManager.swift */,
+			);
+			path = ModelLibrary;
+			sourceTree = "<group>";
+		};
+		AE0000062026101800000006 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000112026101800000011 /* AetherApp.swift */,
+				AE0000122026101800000012 /* ContentView.swift */,
+				AE0000132026101800000013 /* AppState.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		AE0000072026101800000007 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000092026101800000009 /* Components */,
+				AE0000CB20261018000000CB /* Chat */,
+				AE0000EB20261019000000EB /* ModelLibrary */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AE0000EB20261019000000EB /* ModelLibrary */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000E420261019000000E4 /* ModelCardView.swift */,
+				AE0000E520261019000000E5 /* ModelLibraryView.swift */,
+				AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */,
+			);
+			path = ModelLibrary;
+			sourceTree = "<group>";
+		};
+		AE0000092026101800000009 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000142026101800000014 /* FoundationBadge.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		AE0000CB20261018000000CB /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000C320261018000000C3 /* ChatMessage.swift */,
+				AE0000C420261018000000C4 /* ChatViewModel.swift */,
+				AE0000C520261018000000C5 /* MessageBubbleView.swift */,
+				AE0000C620261018000000C6 /* ConversationSidebarView.swift */,
+				AE0000C720261018000000C7 /* ChatView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
+		AE0000CA20261018000000CA /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000C120261018000000C1 /* PersistenceModels.swift */,
+				AE0000C220261018000000C2 /* ConversationDatabase.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		AE0000082026101800000008 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000152026101800000015 /* Assets.xcassets */,
+				AE0000162026101800000016 /* Aether.entitlements */,
+				AE0000172026101800000017 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AE00000A202610180000000A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000182026101800000018 /* llama.xcframework */,
+			);
+			path = Frameworks;
+			sourceTree = "<group>";
+		};
+		AE00000B202610180000000B /* Inference */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000192026101800000019 /* InferenceState.swift */,
+				AE00001A202610180000001A /* InferenceError.swift */,
+				AE00001B202610180000001B /* InferenceWorkerProtocol.swift */,
+				AE00001C202610180000001C /* LlamaInferenceWorker.swift */,
+				AE00001D202610180000001D /* InferenceService.swift */,
+				AE0000A120261018000000A1 /* AetherAtomic.h */,
+				AE0000A220261018000000A2 /* AetherAtomic.c */,
+				AE0000A320261018000000A3 /* Aether-Bridging-Header.h */,
+				AE0000A420261018000000A4 /* CancellationSignal.swift */,
+				AE0000A520261018000000A5 /* GenerationConfiguration.swift */,
+				AE0000A620261018000000A6 /* GenerationEvent.swift */,
+				AE0000A820261018000000A8 /* UTF8Buffer.swift */,
+				AE0000G120261019000000G1 /* PromptMessage.swift */,
+				AE0000G220261019000000G2 /* ChatTemplateFormatter.swift */,
+				AE0000G320261019000000G3 /* ContextBudgeter.swift */,
+				AE0000J120261019000000J1 /* StreamingStopFilter.swift */,
+			);
+			path = Inference;
+			sourceTree = "<group>";
+		};
+		AE0000632026101800000063 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000612026101800000061 /* InferenceLifecycleTests.swift */,
+				AE0000A720261018000000A7 /* InferenceGenerationTests.swift */,
+				AE0000C820261018000000C8 /* ConversationDatabaseTests.swift */,
+				AE0000C920261018000000C9 /* ChatViewModelTests.swift */,
+				AE0000E620261019000000E6 /* ModelLibraryTests.swift */,
+				AE0000G420261019000000G4 /* ChatTemplateFormatterTests.swift */,
+				AE0000G520261019000000G5 /* ContextBudgeterTests.swift */,
+				AE0000J220261019000000J2 /* StreamingStopFilterTests.swift */,
+				AE0000L520261019000000L5 /* HuggingFaceCatalogTests.swift */,
+				AE0000L620261019000000L6 /* ModelDownloadManagerTests.swift */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AE0000302026101800000030 /* Aether */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000502026101800000050 /* Build configuration list for PBXNativeTarget "Aether" */;
+			buildPhases = (
+				AE0000312026101800000031 /* Sources */,
+				AE0000322026101800000032 /* Frameworks */,
+				AE0000332026101800000033 /* Resources */,
+				AE0000342026101800000034 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Aether;
+			productName = Aether;
+			productReference = AE0000102026101800000010 /* Aether.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AE0000702026101800000070 /* AetherTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AE0000802026101800000080 /* Build configuration list for PBXNativeTarget "AetherTests" */;
+			buildPhases = (
+				AE0000712026101800000071 /* Sources */,
+				AE0000722026101800000072 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE0000902026101800000090 /* PBXTargetDependency */,
+			);
+			name = AetherTests;
+			productName = AetherTests;
+			productReference = AE0000602026101800000060 /* AetherTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AE0000012026101800000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					AE0000302026101800000030 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					AE0000702026101800000070 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = AE0000302026101800000030;
+					};
+				};
+			};
+			buildConfigurationList = AE0000402026101800000040 /* Build configuration list for PBXProject "Aether" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AE0000022026101800000002;
+			productRefGroup = AE0000032026101800000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AE0000302026101800000030 /* Aether */,
+				AE0000702026101800000070 /* AetherTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AE0000332026101800000033 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE0000252026101800000025 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AE0000312026101800000031 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE0000212026101800000021 /* AetherApp.swift in Sources */,
+				AE0000222026101800000022 /* ContentView.swift in Sources */,
+				AE0000232026101800000023 /* AppState.swift in Sources */,
+				AE0000242026101800000024 /* FoundationBadge.swift in Sources */,
+				AE0000282026101800000028 /* InferenceState.swift in Sources */,
+				AE0000292026101800000029 /* InferenceError.swift in Sources */,
+				AE00002A202610180000002A /* InferenceWorkerProtocol.swift in Sources */,
+				AE00002B202610180000002B /* LlamaInferenceWorker.swift in Sources */,
+				AE00002C202610180000002C /* InferenceService.swift in Sources */,
+				AE0000B120261018000000B1 /* AetherAtomic.c in Sources */,
+				AE0000B220261018000000B2 /* CancellationSignal.swift in Sources */,
+				AE0000B320261018000000B3 /* GenerationConfiguration.swift in Sources */,
+				AE0000B420261018000000B4 /* GenerationEvent.swift in Sources */,
+				AE0000B620261018000000B6 /* UTF8Buffer.swift in Sources */,
+				AE0000D120261018000000D1 /* PersistenceModels.swift in Sources */,
+				AE0000D220261018000000D2 /* ConversationDatabase.swift in Sources */,
+				AE0000D320261018000000D3 /* ChatMessage.swift in Sources */,
+				AE0000D420261018000000D4 /* ChatViewModel.swift in Sources */,
+				AE0000D520261018000000D5 /* MessageBubbleView.swift in Sources */,
+				AE0000D620261018000000D6 /* ConversationSidebarView.swift in Sources */,
+				AE0000D720261018000000D7 /* ChatView.swift in Sources */,
+				AE0000F120261019000000F1 /* ModelRecord.swift in Sources */,
+				AE0000F220261019000000F2 /* GGUFMetadataReader.swift in Sources */,
+				AE0000F320261019000000F3 /* ModelLibraryService.swift in Sources */,
+				AE0000F420261019000000F4 /* ModelCardView.swift in Sources */,
+				AE0000F520261019000000F5 /* ModelLibraryView.swift in Sources */,
+				AE0000H120261019000000H1 /* PromptMessage.swift in Sources */,
+				AE0000H220261019000000H2 /* ChatTemplateFormatter.swift in Sources */,
+				AE0000H320261019000000H3 /* ContextBudgeter.swift in Sources */,
+				AE0000K120261019000000K1 /* StreamingStopFilter.swift in Sources */,
+				AE0000M120261019000000M1 /* HuggingFaceCatalogModels.swift in Sources */,
+				AE0000M220261019000000M2 /* HuggingFaceCatalogService.swift in Sources */,
+				AE0000M320261019000000M3 /* ModelDownloadManager.swift in Sources */,
+				AE0000M420261019000000M4 /* HuggingFaceModelCardView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AE0000712026101800000071 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE0000622026101800000062 /* InferenceLifecycleTests.swift in Sources */,
+				AE0000B520261018000000B5 /* InferenceGenerationTests.swift in Sources */,
+				AE0000D820261018000000D8 /* ConversationDatabaseTests.swift in Sources */,
+				AE0000D920261018000000D9 /* ChatViewModelTests.swift in Sources */,
+				AE0000F620261019000000F6 /* ModelLibraryTests.swift in Sources */,
+				AE0000H420261019000000H4 /* ChatTemplateFormatterTests.swift in Sources */,
+				AE0000H520261019000000H5 /* ContextBudgeterTests.swift in Sources */,
+				AE0000K220261019000000K2 /* StreamingStopFilterTests.swift in Sources */,
+				AE0000M520261019000000M5 /* HuggingFaceCatalogTests.swift in Sources */,
+				AE0000M620261019000000M6 /* ModelDownloadManagerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AE0000902026101800000090 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AE0000302026101800000030 /* Aether */;
+			targetProxy = AE0000912026101800000091 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AE0000412026101800000041 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				ARCHS = arm64;
+			};
+			name = Debug;
+		};
+		AE0000422026101800000042 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = arm64;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AE0000512026101800000051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Aether/Resources/Aether.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Aether/Frameworks/llama.xcframework/macos-arm64",
+				);
+				INFOPLIST_FILE = Aether/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = "0.1.0";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aether.Aether;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Aether/Sources/Inference/Aether-Bridging-Header.h";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AE0000522026101800000052 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = Aether/Resources/Aether.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Aether/Frameworks/llama.xcframework/macos-arm64",
+				);
+				INFOPLIST_FILE = Aether/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = "0.1.0";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aether.Aether;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Aether/Sources/Inference/Aether-Bridging-Header.h";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AE0000812026101800000081 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Aether/Frameworks/llama.xcframework/macos-arm64",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aether.AetherTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OBJC_BRIDGING_HEADER = "Aether/Sources/Inference/Aether-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aether.app/Contents/MacOS/Aether";
+			};
+			name = Debug;
+		};
+		AE0000822026101800000082 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Aether/Frameworks/llama.xcframework/macos-arm64",
+				);
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.aether.AetherTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "Aether/Sources/Inference/Aether-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Aether.app/Contents/MacOS/Aether";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AE0000402026101800000040 /* Build configuration list for PBXProject "Aether" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000412026101800000041 /* Debug */,
+				AE0000422026101800000042 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000502026101800000050 /* Build configuration list for PBXNativeTarget "Aether" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000512026101800000051 /* Debug */,
+				AE0000522026101800000052 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AE0000802026101800000080 /* Build configuration list for PBXNativeTarget "AetherTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AE0000812026101800000081 /* Debug */,
+				AE0000822026101800000082 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AE0000012026101800000001 /* Project object */;
+}

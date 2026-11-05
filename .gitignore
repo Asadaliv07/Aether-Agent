@@ -1,0 +1,41 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon\r\r
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode
+build/
+DerivedData/
+.build/
+*.moved-aside
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+*.xcscmblueprint
+
+# Reference repositories (external clones audited locally)
+reference-repos/
+
+# Model weights, datasets, and checkpoints (GGUF, safetensors, etc.)
+*.gguf
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# Local databases and runtime state
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+
+# Secrets and environment configs
+.env
+.env.*
+*.secret
+*.key

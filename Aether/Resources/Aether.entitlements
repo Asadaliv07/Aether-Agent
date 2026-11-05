@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- macOS App Sandbox: Isolates application execution to a dedicated container -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- Outgoing network connections for Hugging Face catalog search and model downloading -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- Access to user-selected external model files via NSOpenPanel -->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
+	<!-- Persistent security-scoped bookmark creation and resolution across launches -->
+	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
+</dict>
+</plist>
