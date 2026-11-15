@@ -23,6 +23,11 @@ public struct ChatView: View {
                 errorBanner(message: error)
             }
 
+            // Directory Authorization Onboarding Banner for Agent Mode
+            if viewModel.isAgentModeEnabled && viewModel.authorizedDirectories.isEmpty {
+                directoryOnboardingBanner
+            }
+
             // Message Stream
             ScrollViewReader { proxy in
                 ScrollView(.vertical) {
@@ -33,7 +38,12 @@ public struct ChatView: View {
                             ForEach(viewModel.messages) { message in
                                 MessageBubbleView(
                                     message: message,
-                                    isHighlighted: viewModel.targetScrollMessageId == message.id
+                                    isHighlighted: viewModel.targetScrollMessageId == message.id,
+                                    onRegenerate: message.role == .assistant ? {
+                                        Task {
+                                            await viewModel.regenerateResponse(for: message.id)
+                                        }
+                                    } : nil
                                 )
                                 .id(message.id)
                             }
@@ -178,6 +188,69 @@ public struct ChatView: View {
             }
             .buttonStyle(.plain)
             .help(viewModel.isAgentModeEnabled ? "Agent Mode enabled: Model can invoke tools and inspect system" : "Agent Mode disabled: Model responds with direct text only")
+
+            // Multi-Agent (MAF) Orchestration Selector
+            if viewModel.isAgentModeEnabled {
+                Menu {
+                    Toggle("Enable MAF Multi-Agent", isOn: $viewModel.isMultiAgentModeEnabled)
+
+                    if viewModel.isMultiAgentModeEnabled {
+                        Divider()
+                        Section("MAF Workflow Topology") {
+                            Button(action: { viewModel.selectedWorkflowType = "sequential" }) {
+                                HStack {
+                                    Text("Sequential (Plan → Code → Review)")
+                                    if viewModel.selectedWorkflowType == "sequential" { Image(systemName: "checkmark") }
+                                }
+                            }
+                            Button(action: { viewModel.selectedWorkflowType = "parallel" }) {
+                                HStack {
+                                    Text("Parallel Fan-Out (Plan → Research/Analyze → Review)")
+                                    if viewModel.selectedWorkflowType == "parallel" { Image(systemName: "checkmark") }
+                                }
+                            }
+                            Button(action: { viewModel.selectedWorkflowType = "handoff" }) {
+                                HStack {
+                                    Text("Handoff (Supervisor → Coder)")
+                                    if viewModel.selectedWorkflowType == "handoff" { Image(systemName: "checkmark") }
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: viewModel.isMultiAgentModeEnabled ? "person.3.sequence.fill" : "person.3.sequence")
+                            .font(.system(size: 10))
+                        Text(viewModel.isMultiAgentModeEnabled ? "MAF Multi-Agent" : "Single Agent")
+                            .font(.system(size: 11, weight: .medium))
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 8))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(viewModel.isMultiAgentModeEnabled ? Color.purple.opacity(0.18) : Color.secondary.opacity(0.1))
+                    .foregroundStyle(viewModel.isMultiAgentModeEnabled ? Color.purple : Color.secondary)
+                    .clipShape(Capsule())
+                }
+                .menuStyle(.borderlessButton)
+                .help("Microsoft Agent Framework orchestration topology and multi-agent coordination")
+            }
+
+            // Active MAF Workflow Telemetry
+            if let activeWorkflow = viewModel.activeWorkflowStatus {
+                HStack(spacing: 5) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(activeWorkflow)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(Color.purple)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.purple.opacity(0.12))
+                .clipShape(Capsule())
+            }
 
             modelHeaderSelector
         }
@@ -363,7 +436,7 @@ public struct ChatView: View {
             Spacer()
 
             Button(action: {
-                // Clear error
+                viewModel.clearError()
             }) {
                 Image(systemName: "xmark")
                     .font(.caption2)
@@ -374,6 +447,64 @@ public struct ChatView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color.orange.opacity(0.15))
+    }
+
+    @ViewBuilder
+    private var directoryOnboardingBanner: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "folder.badge.gearshape")
+                    .foregroundStyle(.blue)
+                    .font(.headline)
+                Text("Filesystem Access Needed for Agent Mode")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+            }
+
+            Text("Aether Agent runs in a secure macOS sandbox. To create folders, edit files, or organize your workspace, authorize access to your folders:")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 8) {
+                Button(action: {
+                    Task { try? await viewModel.authorizeCommonDirectory(.desktopDirectory) }
+                }) {
+                    Label("Desktop", systemImage: "desktopcomputer")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(action: {
+                    Task { try? await viewModel.authorizeCommonDirectory(.documentDirectory) }
+                }) {
+                    Label("Documents", systemImage: "doc.text")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(action: {
+                    Task { try? await viewModel.authorizeCommonDirectory(.downloadsDirectory) }
+                }) {
+                    Label("Downloads", systemImage: "arrow.down.circle")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button(action: {
+                    Task { try? await viewModel.promptAndAuthorizeDirectory() }
+                }) {
+                    Label("Choose Custom Folder...", systemImage: "plus.circle")
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+            }
+        }
+        .padding(12)
+        .background(Color.blue.opacity(0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
     // MARK: - Composer Bar

@@ -96,11 +96,20 @@ final class AgentOrchestratorTests: XCTestCase {
     }
 
     func testExecuteToolStepWithAuthorizationGate() async {
-        let registry = ToolRegistry()
-        await registry.register(SystemInfoTool())
-        await registry.register(SandboxedFileReaderTool())
+        let dirManager = AuthorizedDirectoryManager(restorePersistedBookmarks: false)
+        let testDir = FileManager.default.temporaryDirectory.appendingPathComponent("AgentOrchestratorTest_\(UUID().uuidString)")
+        try? FileManager.default.createDirectory(at: testDir, withIntermediateDirectories: true)
+        await dirManager.authorizeTemporaryDirectory(url: testDir)
+        let testFile = testDir.appendingPathComponent("test.txt")
+        try? "Sample content".write(to: testFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: testDir) }
 
-        let orchestrator = AgentOrchestrator(registry: registry)
+        let guardActor = ToolSecurityGuard(directoryManager: dirManager)
+        let registry = ToolRegistry(securityGuard: guardActor)
+        await registry.register(SystemInfoTool())
+        await registry.register(SandboxedFileReaderTool(securityGuard: guardActor))
+
+        let orchestrator = AgentOrchestrator(registry: registry, securityGuard: guardActor)
         let convId = UUID()
 
         // 1. Safe tool executes immediately
@@ -114,7 +123,7 @@ final class AgentOrchestratorTests: XCTestCase {
         XCTAssertTrue(resSafe?.isSuccess == true)
 
         // 2. Confirmation required tool yields requiresUserConfirmation without prior approval
-        let callConfirm = ToolCallInvocation(toolName: "file_reader", parameters: ["path": "/tmp/test.txt"])
+        let callConfirm = ToolCallInvocation(toolName: "file_reader", parameters: ["path": testFile.path])
         let (decConfirm, resConfirm) = await orchestrator.executeToolStep(
             invocation: callConfirm,
             conversationId: convId,

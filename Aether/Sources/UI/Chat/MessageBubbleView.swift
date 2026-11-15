@@ -8,13 +8,15 @@ import AppKit
 public struct MessageBubbleView: View {
     public let message: ChatMessage
     public let isHighlighted: Bool
+    public var onRegenerate: (() -> Void)?
     @State private var isHovering = false
     @State private var isThoughtExpanded: Bool = false
     @State private var isToolResponseExpanded: Bool = false
 
-    public init(message: ChatMessage, isHighlighted: Bool = false) {
+    public init(message: ChatMessage, isHighlighted: Bool = false, onRegenerate: (() -> Void)? = nil) {
         self.message = message
         self.isHighlighted = isHighlighted
+        self.onRegenerate = onRegenerate
     }
 
     public var body: some View {
@@ -42,10 +44,7 @@ public struct MessageBubbleView: View {
     @ViewBuilder
     private var userBubble: some View {
         VStack(alignment: .trailing, spacing: 4) {
-            Text(message.content)
-                .font(.body)
-                .foregroundStyle(.white)
-                .textSelection(.enabled)
+            MarkdownContentView(text: message.content, isUser: true)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
@@ -173,16 +172,10 @@ public struct MessageBubbleView: View {
 
                             // 4. Conversational Text Body
                             if !cleanConversationalText.isEmpty {
-                                Text(cleanConversationalText)
-                                    .font(.body)
-                                    .foregroundStyle(.primary)
-                                    .textSelection(.enabled)
+                                MarkdownContentView(text: cleanConversationalText, isUser: false)
                             }
                         } else {
-                            Text(message.content)
-                                .font(.body)
-                                .foregroundStyle(.primary)
-                                .textSelection(.enabled)
+                            MarkdownContentView(text: message.content, isUser: false)
                         }
 
                         if message.isStreaming {
@@ -245,6 +238,9 @@ public struct MessageBubbleView: View {
                     }
                     if isHovering && !message.content.isEmpty {
                         copyButton
+                        if let onRegenerate = onRegenerate, !message.isStreaming {
+                            regenerateButton(action: onRegenerate)
+                        }
                     }
                 }
                 .padding(.leading, 4)
@@ -270,6 +266,25 @@ public struct MessageBubbleView: View {
         }
         .buttonStyle(.plain)
         .help("Copy to clipboard")
+    }
+
+    @ViewBuilder
+    private func regenerateButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 10))
+                Text("Regenerate")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color.secondary.opacity(0.12))
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help("Regenerate response")
     }
 
     private func copyToClipboard() {

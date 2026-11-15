@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AE0000AD20261109000000AD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000AD20261109000000AF /* AppDelegate.swift */; };
 		AE0000212026101800000021 /* AetherApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000112026101800000011 /* AetherApp.swift */; };
 		AE0000222026101800000022 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000122026101800000012 /* ContentView.swift */; };
 		AE0000232026101800000023 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000132026101800000013 /* AppState.swift */; };
@@ -60,10 +61,69 @@
 		AE0000Q420261105000000Q4 /* ToolRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N420261105000000N4 /* ToolRegistry.swift */; };
 		AE0000Q520261105000000Q5 /* NativeTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N520261105000000N5 /* NativeTools.swift */; };
 		AE0000Q620261105000000Q6 /* AgentOrchestrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N620261105000000N6 /* AgentOrchestrator.swift */; };
+		AE0000Q720261105000000Q7 /* AgentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N720261105000000N7 /* AgentState.swift */; };
+		AE0000Q820261105000000Q8 /* AgentExecutionLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N820261105000000N8 /* AgentExecutionLoop.swift */; };
+		AE0000Q920261107000000Q9 /* AgentCyclicController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000N920261107000000N9 /* AgentCyclicController.swift */; };
+		AE0000QB20261107000000QB /* ProductionAgentInferenceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000NB20261107000000NB /* ProductionAgentInferenceProvider.swift */; };
+		AE0000QC20261108000000QC /* AgentCompletionVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000NC20261108000000NC /* AgentCompletionVerifier.swift */; };
+		AE0000B120261107000000B1 /* MCPProtocolTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M120261107000000M1 /* MCPProtocolTypes.swift */; };
+		AE0000B220261107000000B2 /* MCPTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M220261107000000M2 /* MCPTransport.swift */; };
+		AE0000B320261107000000B3 /* AuthorizedDirectoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M320261107000000M3 /* AuthorizedDirectoryManager.swift */; };
+		AE0000B420261107000000B4 /* MCPFilesystemServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M420261107000000M4 /* MCPFilesystemServer.swift */; };
+		AE0000B520261107000000B5 /* MCPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M520261107000000M5 /* MCPClient.swift */; };
+		AE0000B620261107000000B6 /* MCPToolAdapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M620261107000000M6 /* MCPToolAdapter.swift */; };
+		AE0000B720261107000000B7 /* MCPFilesystemTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000M720261107000000M7 /* MCPFilesystemTests.swift */; };
+		AE0000MAB120261107000001 /* MultiAgentProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF120261107000001 /* MultiAgentProtocol.swift */; };
+		AE0000MAB220261107000002 /* MultiAgentTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF220261107000002 /* MultiAgentTransport.swift */; };
+		AE0000MAB320261107000003 /* MultiAgentToolBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF320261107000003 /* MultiAgentToolBridge.swift */; };
+		AE0000MAB420261107000004 /* MultiAgentSidecarManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF420261107000004 /* MultiAgentSidecarManager.swift */; };
+		AE0000MAB520261107000005 /* MultiAgentSupervisor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF520261107000005 /* MultiAgentSupervisor.swift */; };
+		AE0000MAB820261110000008 /* SidecarRuntimeLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF820261110000008 /* SidecarRuntimeLocator.swift */; };
+		AE0000MAB620261107000006 /* MultiAgentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF620261107000006 /* MultiAgentTests.swift */; };
+		AE0000MAB720261107000007 /* MultiAgentSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000MAF720261107000007 /* MultiAgentSecurityTests.swift */; };
+		AE0000R520261105000000R5 /* AgentExecutionLoopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P520261105000000P5 /* AgentExecutionLoopTests.swift */; };
+		AE0000R620261107000000R6 /* ProductionAgentInferenceProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P620261107000000P6 /* ProductionAgentInferenceProviderTests.swift */; };
+		AE0000R720261107000000R7 /* AgentLifecycleHardeningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P720261107000000P7 /* AgentLifecycleHardeningTests.swift */; };
+		AE0000R820261108000000R8 /* AgentCompletionVerifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P820261108000000P8 /* AgentCompletionVerifierTests.swift */; };
 		AE0000R120261105000000R1 /* ToolExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P120261105000000P1 /* ToolExecutionTests.swift */; };
 		AE0000R220261105000000R2 /* ToolSecurityGuardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */; };
 		AE0000R320261105000000R3 /* NativeToolsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P320261105000000P3 /* NativeToolsTests.swift */; };
 		AE0000R420261105000000R4 /* AgentOrchestratorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */; };
+		AE0000T120261105000000T1 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000S120261105000000S1 /* AppSettings.swift */; };
+		AE0000T220261105000000T2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000S220261105000000S2 /* SettingsView.swift */; };
+		AE0000T320261105000000T3 /* MarkdownContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000S320261105000000S3 /* MarkdownContentView.swift */; };
+		AE0000T420261105000000T4 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000S420261105000000S4 /* AppSettingsTests.swift */; };
+		AE0000T520261105000000T5 /* MessageMarkdownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000S520261105000000S5 /* MessageMarkdownTests.swift */; };
+		AE0000W120261105000000W1 /* ModelCatalogTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V120261105000000V1 /* ModelCatalogTypes.swift */; };
+		AE0000W220261105000000W2 /* DeviceCapabilityEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V220261105000000V2 /* DeviceCapabilityEngine.swift */; };
+		AE0000W320261105000000W3 /* ModelCatalogRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V320261105000000V3 /* ModelCatalogRegistry.swift */; };
+		AE0000W420261105000000W4 /* ModelCatalogSearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V420261105000000V4 /* ModelCatalogSearchEngine.swift */; };
+		AE0000W520261105000000W5 /* ModelDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V520261105000000V5 /* ModelDetailSheet.swift */; };
+		AE0000W620261105000000W6 /* ModelHubCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V620261105000000V6 /* ModelHubCardView.swift */; };
+		AE0000W720261105000000W7 /* ModelCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000V720261105000000V7 /* ModelCatalogTests.swift */; };
+		AE0000RMTB20261107000001 /* RealModelToolExecutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000RMTF20261107000001 /* RealModelToolExecutionTests.swift */; };
+		AE0000ATB120261107000001 /* AutomationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF120261107000001 /* AutomationModels.swift */; };
+		AE0000ATB220261107000002 /* AutomationPermissionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF220261107000002 /* AutomationPermissionManager.swift */; };
+		AE0000ATB320261107000003 /* BrowserAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF320261107000003 /* BrowserAutomationProvider.swift */; };
+		AE0000ATB420261107000004 /* BrowserSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF420261107000004 /* BrowserSessionManager.swift */; };
+		AE0000ATB520261107000005 /* WebKitBrowserAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF520261107000005 /* WebKitBrowserAutomationProvider.swift */; };
+		AE0000ATB620261107000006 /* MockBrowserAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF620261107000006 /* MockBrowserAutomationProvider.swift */; };
+		AE0000ATB720261107000007 /* BrowserAutomationTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF720261107000007 /* BrowserAutomationTools.swift */; };
+		AE0000ATB820261107000008 /* DesktopAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF820261107000008 /* DesktopAutomationProvider.swift */; };
+		AE0000ATB920261107000009 /* ApplicationSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATF920261107000009 /* ApplicationSessionManager.swift */; };
+		AE0000ATBA20261107000010 /* AccessibilityInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATFA20261107000010 /* AccessibilityInspector.swift */; };
+		AE0000ATBB20261107000011 /* NativeDesktopAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATFB20261107000011 /* NativeDesktopAutomationProvider.swift */; };
+		AE0000ATBC20261107000012 /* MockDesktopAutomationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATFC20261107000012 /* MockDesktopAutomationProvider.swift */; };
+		AE0000ATBD20261107000013 /* DesktopAutomationTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATFD20261107000013 /* DesktopAutomationTools.swift */; };
+		AE0000ATBE20261107000014 /* NativeApplicationTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATFE20261107000014 /* NativeApplicationTools.swift */; };
+		AE0000ATTB20261107000001 /* AutomationIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ATTF20261107000001 /* AutomationIntegrationTests.swift */; };
+		AE0000ADB120261107000001 /* ToolSymlinkSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV120261107000001 /* ToolSymlinkSecurityTests.swift */; };
+		AE0000ADB220261107000002 /* AuthorizedRootProtectionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV220261107000002 /* AuthorizedRootProtectionTests.swift */; };
+		AE0000ADB320261107000003 /* ToolPermissionEscalationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV320261107000003 /* ToolPermissionEscalationTests.swift */; };
+		AE0000ADB420261107000004 /* ToolParserFuzzTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV420261107000004 /* ToolParserFuzzTests.swift */; };
+		AE0000ADB520261107000005 /* MCPPermissionConsistencyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV520261107000005 /* MCPPermissionConsistencyTests.swift */; };
+		AE0000ADB620261107000006 /* AgentExecutionLifecycleSecurityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV620261107000006 /* AgentExecutionLifecycleSecurityTests.swift */; };
+		AE0000ADB720261107000007 /* ToolDiscoveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE0000ADV720261107000007 /* ToolDiscoveryTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -91,6 +151,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AE0000AD20261109000000AF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AE0000102026101800000010 /* Aether.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aether.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE0000112026101800000011 /* AetherApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AetherApp.swift; sourceTree = "<group>"; };
 		AE0000122026101800000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -149,10 +210,69 @@
 		AE0000N420261105000000N4 /* ToolRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolRegistry.swift; sourceTree = "<group>"; };
 		AE0000N520261105000000N5 /* NativeTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeTools.swift; sourceTree = "<group>"; };
 		AE0000N620261105000000N6 /* AgentOrchestrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestrator.swift; sourceTree = "<group>"; };
+		AE0000N720261105000000N7 /* AgentState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentState.swift; sourceTree = "<group>"; };
+		AE0000N820261105000000N8 /* AgentExecutionLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutionLoop.swift; sourceTree = "<group>"; };
+		AE0000N920261107000000N9 /* AgentCyclicController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentCyclicController.swift; sourceTree = "<group>"; };
+		AE0000NB20261107000000NB /* ProductionAgentInferenceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductionAgentInferenceProvider.swift; sourceTree = "<group>"; };
+		AE0000NC20261108000000NC /* AgentCompletionVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentCompletionVerifier.swift; sourceTree = "<group>"; };
+		AE0000M120261107000000M1 /* MCPProtocolTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPProtocolTypes.swift; sourceTree = "<group>"; };
+		AE0000M220261107000000M2 /* MCPTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPTransport.swift; sourceTree = "<group>"; };
+		AE0000M320261107000000M3 /* AuthorizedDirectoryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizedDirectoryManager.swift; sourceTree = "<group>"; };
+		AE0000M420261107000000M4 /* MCPFilesystemServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPFilesystemServer.swift; sourceTree = "<group>"; };
+		AE0000M520261107000000M5 /* MCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPClient.swift; sourceTree = "<group>"; };
+		AE0000M620261107000000M6 /* MCPToolAdapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPToolAdapter.swift; sourceTree = "<group>"; };
+		AE0000M720261107000000M7 /* MCPFilesystemTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPFilesystemTests.swift; sourceTree = "<group>"; };
+		AE0000MAF120261107000001 /* MultiAgentProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentProtocol.swift; sourceTree = "<group>"; };
+		AE0000MAF220261107000002 /* MultiAgentTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentTransport.swift; sourceTree = "<group>"; };
+		AE0000MAF320261107000003 /* MultiAgentToolBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentToolBridge.swift; sourceTree = "<group>"; };
+		AE0000MAF420261107000004 /* MultiAgentSidecarManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentSidecarManager.swift; sourceTree = "<group>"; };
+		AE0000MAF520261107000005 /* MultiAgentSupervisor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentSupervisor.swift; sourceTree = "<group>"; };
+		AE0000MAF820261110000008 /* SidecarRuntimeLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidecarRuntimeLocator.swift; sourceTree = "<group>"; };
+		AE0000MAF620261107000006 /* MultiAgentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentTests.swift; sourceTree = "<group>"; };
+		AE0000MAF720261107000007 /* MultiAgentSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiAgentSecurityTests.swift; sourceTree = "<group>"; };
+		AE0000P520261105000000P5 /* AgentExecutionLoopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutionLoopTests.swift; sourceTree = "<group>"; };
+		AE0000P620261107000000P6 /* ProductionAgentInferenceProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductionAgentInferenceProviderTests.swift; sourceTree = "<group>"; };
+		AE0000P720261107000000P7 /* AgentLifecycleHardeningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentLifecycleHardeningTests.swift; sourceTree = "<group>"; };
+		AE0000P820261108000000P8 /* AgentCompletionVerifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentCompletionVerifierTests.swift; sourceTree = "<group>"; };
 		AE0000P120261105000000P1 /* ToolExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolExecutionTests.swift; sourceTree = "<group>"; };
 		AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolSecurityGuardTests.swift; sourceTree = "<group>"; };
 		AE0000P320261105000000P3 /* NativeToolsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeToolsTests.swift; sourceTree = "<group>"; };
 		AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentOrchestratorTests.swift; sourceTree = "<group>"; };
+		AE0000S120261105000000S1 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		AE0000S220261105000000S2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AE0000S320261105000000S3 /* MarkdownContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownContentView.swift; sourceTree = "<group>"; };
+		AE0000S420261105000000S4 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		AE0000S520261105000000S5 /* MessageMarkdownTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageMarkdownTests.swift; sourceTree = "<group>"; };
+		AE0000V120261105000000V1 /* ModelCatalogTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalogTypes.swift; sourceTree = "<group>"; };
+		AE0000V220261105000000V2 /* DeviceCapabilityEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCapabilityEngine.swift; sourceTree = "<group>"; };
+		AE0000V320261105000000V3 /* ModelCatalogRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalogRegistry.swift; sourceTree = "<group>"; };
+		AE0000V420261105000000V4 /* ModelCatalogSearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalogSearchEngine.swift; sourceTree = "<group>"; };
+		AE0000V520261105000000V5 /* ModelDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDetailSheet.swift; sourceTree = "<group>"; };
+		AE0000V620261105000000V6 /* ModelHubCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelHubCardView.swift; sourceTree = "<group>"; };
+		AE0000V720261105000000V7 /* ModelCatalogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCatalogTests.swift; sourceTree = "<group>"; };
+		AE0000RMTF20261107000001 /* RealModelToolExecutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealModelToolExecutionTests.swift; sourceTree = "<group>"; };
+		AE0000ATF120261107000001 /* AutomationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationModels.swift; sourceTree = "<group>"; };
+		AE0000ATF220261107000002 /* AutomationPermissionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationPermissionManager.swift; sourceTree = "<group>"; };
+		AE0000ATF320261107000003 /* BrowserAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATF420261107000004 /* BrowserSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserSessionManager.swift; sourceTree = "<group>"; };
+		AE0000ATF520261107000005 /* WebKitBrowserAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebKitBrowserAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATF620261107000006 /* MockBrowserAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockBrowserAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATF720261107000007 /* BrowserAutomationTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserAutomationTools.swift; sourceTree = "<group>"; };
+		AE0000ATF820261107000008 /* DesktopAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATF920261107000009 /* ApplicationSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationSessionManager.swift; sourceTree = "<group>"; };
+		AE0000ATFA20261107000010 /* AccessibilityInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityInspector.swift; sourceTree = "<group>"; };
+		AE0000ATFB20261107000011 /* NativeDesktopAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDesktopAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATFC20261107000012 /* MockDesktopAutomationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDesktopAutomationProvider.swift; sourceTree = "<group>"; };
+		AE0000ATFD20261107000013 /* DesktopAutomationTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopAutomationTools.swift; sourceTree = "<group>"; };
+		AE0000ATFE20261107000014 /* NativeApplicationTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeApplicationTools.swift; sourceTree = "<group>"; };
+		AE0000ATTF20261107000001 /* AutomationIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutomationIntegrationTests.swift; sourceTree = "<group>"; };
+		AE0000ADV120261107000001 /* ToolSymlinkSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolSymlinkSecurityTests.swift; sourceTree = "<group>"; };
+		AE0000ADV220261107000002 /* AuthorizedRootProtectionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthorizedRootProtectionTests.swift; sourceTree = "<group>"; };
+		AE0000ADV320261107000003 /* ToolPermissionEscalationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolPermissionEscalationTests.swift; sourceTree = "<group>"; };
+		AE0000ADV420261107000004 /* ToolParserFuzzTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolParserFuzzTests.swift; sourceTree = "<group>"; };
+		AE0000ADV520261107000005 /* MCPPermissionConsistencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPPermissionConsistencyTests.swift; sourceTree = "<group>"; };
+		AE0000ADV620261107000006 /* AgentExecutionLifecycleSecurityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentExecutionLifecycleSecurityTests.swift; sourceTree = "<group>"; };
+		AE0000ADV720261107000007 /* ToolDiscoveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolDiscoveryTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -224,8 +344,63 @@
 				AE0000N420261105000000N4 /* ToolRegistry.swift */,
 				AE0000N520261105000000N5 /* NativeTools.swift */,
 				AE0000N620261105000000N6 /* AgentOrchestrator.swift */,
+				AE0000N720261105000000N7 /* AgentState.swift */,
+				AE0000N820261105000000N8 /* AgentExecutionLoop.swift */,
+				AE0000N920261107000000N9 /* AgentCyclicController.swift */,
+				AE0000NB20261107000000NB /* ProductionAgentInferenceProvider.swift */,
+				AE0000NC20261108000000NC /* AgentCompletionVerifier.swift */,
+				AE0000MCPG20261107000000MC /* MCP */,
+				AE0000MAG20261107000000MA /* MultiAgent */,
+				AE0000AUTG20261107000000AU /* Automation */,
 			);
 			path = Agent;
+			sourceTree = "<group>";
+		};
+		AE0000AUTG20261107000000AU /* Automation */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000ATF120261107000001 /* AutomationModels.swift */,
+				AE0000ATF220261107000002 /* AutomationPermissionManager.swift */,
+				AE0000ATF320261107000003 /* BrowserAutomationProvider.swift */,
+				AE0000ATF420261107000004 /* BrowserSessionManager.swift */,
+				AE0000ATF520261107000005 /* WebKitBrowserAutomationProvider.swift */,
+				AE0000ATF620261107000006 /* MockBrowserAutomationProvider.swift */,
+				AE0000ATF720261107000007 /* BrowserAutomationTools.swift */,
+				AE0000ATF820261107000008 /* DesktopAutomationProvider.swift */,
+				AE0000ATF920261107000009 /* ApplicationSessionManager.swift */,
+				AE0000ATFA20261107000010 /* AccessibilityInspector.swift */,
+				AE0000ATFB20261107000011 /* NativeDesktopAutomationProvider.swift */,
+				AE0000ATFC20261107000012 /* MockDesktopAutomationProvider.swift */,
+				AE0000ATFD20261107000013 /* DesktopAutomationTools.swift */,
+				AE0000ATFE20261107000014 /* NativeApplicationTools.swift */,
+			);
+			path = Automation;
+			sourceTree = "<group>";
+		};
+		AE0000MAG20261107000000MA /* MultiAgent */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000MAF120261107000001 /* MultiAgentProtocol.swift */,
+				AE0000MAF220261107000002 /* MultiAgentTransport.swift */,
+				AE0000MAF320261107000003 /* MultiAgentToolBridge.swift */,
+				AE0000MAF420261107000004 /* MultiAgentSidecarManager.swift */,
+				AE0000MAF520261107000005 /* MultiAgentSupervisor.swift */,
+				AE0000MAF820261110000008 /* SidecarRuntimeLocator.swift */,
+			);
+			path = MultiAgent;
+			sourceTree = "<group>";
+		};
+		AE0000MCPG20261107000000MC /* MCP */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000M120261107000000M1 /* MCPProtocolTypes.swift */,
+				AE0000M220261107000000M2 /* MCPTransport.swift */,
+				AE0000M320261107000000M3 /* AuthorizedDirectoryManager.swift */,
+				AE0000M420261107000000M4 /* MCPFilesystemServer.swift */,
+				AE0000M520261107000000M5 /* MCPClient.swift */,
+				AE0000M620261107000000M6 /* MCPToolAdapter.swift */,
+			);
+			path = MCP;
 			sourceTree = "<group>";
 		};
 		AE0000EA20261019000000EA /* ModelLibrary */ = {
@@ -237,6 +412,10 @@
 				AE0000L120261019000000L1 /* HuggingFaceCatalogModels.swift */,
 				AE0000L220261019000000L2 /* HuggingFaceCatalogService.swift */,
 				AE0000L320261019000000L3 /* ModelDownloadManager.swift */,
+				AE0000V120261105000000V1 /* ModelCatalogTypes.swift */,
+				AE0000V220261105000000V2 /* DeviceCapabilityEngine.swift */,
+				AE0000V320261105000000V3 /* ModelCatalogRegistry.swift */,
+				AE0000V420261105000000V4 /* ModelCatalogSearchEngine.swift */,
 			);
 			path = ModelLibrary;
 			sourceTree = "<group>";
@@ -244,9 +423,11 @@
 		AE0000062026101800000006 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				AE0000AD20261109000000AF /* AppDelegate.swift */,
 				AE0000112026101800000011 /* AetherApp.swift */,
 				AE0000122026101800000012 /* ContentView.swift */,
 				AE0000132026101800000013 /* AppState.swift */,
+				AE0000S120261105000000S1 /* AppSettings.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -257,8 +438,17 @@
 				AE0000092026101800000009 /* Components */,
 				AE0000CB20261018000000CB /* Chat */,
 				AE0000EB20261019000000EB /* ModelLibrary */,
+				AE0000SB20261105000000SB /* Settings */,
 			);
 			path = UI;
+			sourceTree = "<group>";
+		};
+		AE0000SB20261105000000SB /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AE0000S220261105000000S2 /* SettingsView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		AE0000EB20261019000000EB /* ModelLibrary */ = {
@@ -267,6 +457,8 @@
 				AE0000E420261019000000E4 /* ModelCardView.swift */,
 				AE0000E520261019000000E5 /* ModelLibraryView.swift */,
 				AE0000L420261019000000L4 /* HuggingFaceModelCardView.swift */,
+				AE0000V520261105000000V5 /* ModelDetailSheet.swift */,
+				AE0000V620261105000000V6 /* ModelHubCardView.swift */,
 			);
 			path = ModelLibrary;
 			sourceTree = "<group>";
@@ -287,6 +479,7 @@
 				AE0000C520261018000000C5 /* MessageBubbleView.swift */,
 				AE0000C620261018000000C6 /* ConversationSidebarView.swift */,
 				AE0000C720261018000000C7 /* ChatView.swift */,
+				AE0000S320261105000000S3 /* MarkdownContentView.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -358,6 +551,25 @@
 				AE0000P220261105000000P2 /* ToolSecurityGuardTests.swift */,
 				AE0000P320261105000000P3 /* NativeToolsTests.swift */,
 				AE0000P420261105000000P4 /* AgentOrchestratorTests.swift */,
+				AE0000P520261105000000P5 /* AgentExecutionLoopTests.swift */,
+				AE0000P620261107000000P6 /* ProductionAgentInferenceProviderTests.swift */,
+				AE0000P720261107000000P7 /* AgentLifecycleHardeningTests.swift */,
+				AE0000P820261108000000P8 /* AgentCompletionVerifierTests.swift */,
+				AE0000M720261107000000M7 /* MCPFilesystemTests.swift */,
+				AE0000S420261105000000S4 /* AppSettingsTests.swift */,
+				AE0000S520261105000000S5 /* MessageMarkdownTests.swift */,
+				AE0000V720261105000000V7 /* ModelCatalogTests.swift */,
+				AE0000MAF620261107000006 /* MultiAgentTests.swift */,
+				AE0000MAF720261107000007 /* MultiAgentSecurityTests.swift */,
+				AE0000RMTF20261107000001 /* RealModelToolExecutionTests.swift */,
+				AE0000ATTF20261107000001 /* AutomationIntegrationTests.swift */,
+				AE0000ADV120261107000001 /* ToolSymlinkSecurityTests.swift */,
+				AE0000ADV220261107000002 /* AuthorizedRootProtectionTests.swift */,
+				AE0000ADV320261107000003 /* ToolPermissionEscalationTests.swift */,
+				AE0000ADV420261107000004 /* ToolParserFuzzTests.swift */,
+				AE0000ADV520261107000005 /* MCPPermissionConsistencyTests.swift */,
+				AE0000ADV620261107000006 /* AgentExecutionLifecycleSecurityTests.swift */,
+				AE0000ADV720261107000007 /* ToolDiscoveryTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -453,6 +665,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE0000AD20261109000000AD /* AppDelegate.swift in Sources */,
 				AE0000212026101800000021 /* AetherApp.swift in Sources */,
 				AE0000222026101800000022 /* ContentView.swift in Sources */,
 				AE0000232026101800000023 /* AppState.swift in Sources */,
@@ -493,6 +706,46 @@
 				AE0000Q420261105000000Q4 /* ToolRegistry.swift in Sources */,
 				AE0000Q520261105000000Q5 /* NativeTools.swift in Sources */,
 				AE0000Q620261105000000Q6 /* AgentOrchestrator.swift in Sources */,
+				AE0000Q720261105000000Q7 /* AgentState.swift in Sources */,
+				AE0000Q820261105000000Q8 /* AgentExecutionLoop.swift in Sources */,
+				AE0000Q920261107000000Q9 /* AgentCyclicController.swift in Sources */,
+				AE0000QB20261107000000QB /* ProductionAgentInferenceProvider.swift in Sources */,
+				AE0000QC20261108000000QC /* AgentCompletionVerifier.swift in Sources */,
+				AE0000B120261107000000B1 /* MCPProtocolTypes.swift in Sources */,
+				AE0000B220261107000000B2 /* MCPTransport.swift in Sources */,
+				AE0000B320261107000000B3 /* AuthorizedDirectoryManager.swift in Sources */,
+				AE0000B420261107000000B4 /* MCPFilesystemServer.swift in Sources */,
+				AE0000B520261107000000B5 /* MCPClient.swift in Sources */,
+				AE0000B620261107000000B6 /* MCPToolAdapter.swift in Sources */,
+				AE0000MAB120261107000001 /* MultiAgentProtocol.swift in Sources */,
+				AE0000MAB220261107000002 /* MultiAgentTransport.swift in Sources */,
+				AE0000MAB320261107000003 /* MultiAgentToolBridge.swift in Sources */,
+				AE0000MAB420261107000004 /* MultiAgentSidecarManager.swift in Sources */,
+				AE0000MAB520261107000005 /* MultiAgentSupervisor.swift in Sources */,
+				AE0000MAB820261110000008 /* SidecarRuntimeLocator.swift in Sources */,
+				AE0000T120261105000000T1 /* AppSettings.swift in Sources */,
+				AE0000T220261105000000T2 /* SettingsView.swift in Sources */,
+				AE0000T320261105000000T3 /* MarkdownContentView.swift in Sources */,
+				AE0000W120261105000000W1 /* ModelCatalogTypes.swift in Sources */,
+				AE0000W220261105000000W2 /* DeviceCapabilityEngine.swift in Sources */,
+				AE0000W320261105000000W3 /* ModelCatalogRegistry.swift in Sources */,
+				AE0000W420261105000000W4 /* ModelCatalogSearchEngine.swift in Sources */,
+				AE0000W520261105000000W5 /* ModelDetailSheet.swift in Sources */,
+				AE0000W620261105000000W6 /* ModelHubCardView.swift in Sources */,
+				AE0000ATB120261107000001 /* AutomationModels.swift in Sources */,
+				AE0000ATB220261107000002 /* AutomationPermissionManager.swift in Sources */,
+				AE0000ATB320261107000003 /* BrowserAutomationProvider.swift in Sources */,
+				AE0000ATB420261107000004 /* BrowserSessionManager.swift in Sources */,
+				AE0000ATB520261107000005 /* WebKitBrowserAutomationProvider.swift in Sources */,
+				AE0000ATB620261107000006 /* MockBrowserAutomationProvider.swift in Sources */,
+				AE0000ATB720261107000007 /* BrowserAutomationTools.swift in Sources */,
+				AE0000ATB820261107000008 /* DesktopAutomationProvider.swift in Sources */,
+				AE0000ATB920261107000009 /* ApplicationSessionManager.swift in Sources */,
+				AE0000ATBA20261107000010 /* AccessibilityInspector.swift in Sources */,
+				AE0000ATBB20261107000011 /* NativeDesktopAutomationProvider.swift in Sources */,
+				AE0000ATBC20261107000012 /* MockDesktopAutomationProvider.swift in Sources */,
+				AE0000ATBD20261107000013 /* DesktopAutomationTools.swift in Sources */,
+				AE0000ATBE20261107000014 /* NativeApplicationTools.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,6 +767,25 @@
 				AE0000R220261105000000R2 /* ToolSecurityGuardTests.swift in Sources */,
 				AE0000R320261105000000R3 /* NativeToolsTests.swift in Sources */,
 				AE0000R420261105000000R4 /* AgentOrchestratorTests.swift in Sources */,
+				AE0000R520261105000000R5 /* AgentExecutionLoopTests.swift in Sources */,
+				AE0000R620261107000000R6 /* ProductionAgentInferenceProviderTests.swift in Sources */,
+				AE0000R720261107000000R7 /* AgentLifecycleHardeningTests.swift in Sources */,
+				AE0000R820261108000000R8 /* AgentCompletionVerifierTests.swift in Sources */,
+				AE0000B720261107000000B7 /* MCPFilesystemTests.swift in Sources */,
+				AE0000T420261105000000T4 /* AppSettingsTests.swift in Sources */,
+				AE0000T520261105000000T5 /* MessageMarkdownTests.swift in Sources */,
+				AE0000W720261105000000W7 /* ModelCatalogTests.swift in Sources */,
+				AE0000MAB620261107000006 /* MultiAgentTests.swift in Sources */,
+				AE0000MAB720261107000007 /* MultiAgentSecurityTests.swift in Sources */,
+				AE0000RMTB20261107000001 /* RealModelToolExecutionTests.swift in Sources */,
+				AE0000ATTB20261107000001 /* AutomationIntegrationTests.swift in Sources */,
+				AE0000ADB120261107000001 /* ToolSymlinkSecurityTests.swift in Sources */,
+				AE0000ADB220261107000002 /* AuthorizedRootProtectionTests.swift in Sources */,
+				AE0000ADB320261107000003 /* ToolPermissionEscalationTests.swift in Sources */,
+				AE0000ADB420261107000004 /* ToolParserFuzzTests.swift in Sources */,
+				AE0000ADB520261107000005 /* MCPPermissionConsistencyTests.swift in Sources */,
+				AE0000ADB620261107000006 /* AgentExecutionLifecycleSecurityTests.swift in Sources */,
+				AE0000ADB720261107000007 /* ToolDiscoveryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

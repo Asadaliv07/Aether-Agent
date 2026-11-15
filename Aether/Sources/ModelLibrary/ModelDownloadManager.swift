@@ -225,9 +225,16 @@ public actor ModelDownloadManager: ModelDownloadManagerProtocol {
         try Self.validateSafeRepoId(repoId)
 
         // 2. Resolve target file path
-        let destinationDir = targetDirectory(for: repoId)
-        try FileManager.default.createDirectory(at: destinationDir, withIntermediateDirectories: true)
-        let finalPath = destinationDir.appendingPathComponent(filename).path
+        let destinationDir = targetDirectory(for: repoId).standardizedFileURL
+        let finalFileURL = destinationDir.appendingPathComponent(filename).standardizedFileURL
+
+        // Enforce strict containment within the target repository directory
+        guard finalFileURL.path.hasPrefix(destinationDir.path + "/") else {
+            throw ModelDownloadError.unsafePath(filename)
+        }
+
+        try FileManager.default.createDirectory(at: finalFileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let finalPath = finalFileURL.path
 
         // 3. Overwrite check: If final file already exists on disk, reject
         if FileManager.default.fileExists(atPath: finalPath) {
@@ -569,6 +576,9 @@ public actor ModelDownloadManager: ModelDownloadManagerProtocol {
         var didMoveToFinalDestination = false
 
         do {
+            // Ensure destination directory hierarchy exists before staging or finalizing
+            try FileManager.default.createDirectory(at: finalURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+
             // Move from temporary cache to persistent staging file
             try? FileManager.default.removeItem(at: stagingURL)
             try FileManager.default.moveItem(at: temporaryLocation, to: stagingURL)
@@ -693,11 +703,41 @@ public actor ModelDownloadManager: ModelDownloadManagerProtocol {
         guard !trimmed.isEmpty else {
             throw ModelDownloadError.invalidFilename(filename)
         }
-        guard !trimmed.contains("/"), !trimmed.contains("\\"), !trimmed.contains(".."), !trimmed.hasPrefix(".") else {
-            throw ModelDownloadError.unsafePath(filename)
-        }
         guard trimmed.lowercased().hasSuffix(".gguf") else {
             throw ModelDownloadError.invalidFilename(filename)
+        }
+
+        // Prevent absolute paths, user paths, backslashes, null characters, and empty/double slashes
+        guard !trimmed.hasPrefix("/"),
+              !trimmed.hasPrefix("~"),
+              !trimmed.hasSuffix("/"),
+              !trimmed.contains("\\"),
+              !trimmed.contains("\0"),
+              !trimmed.contains("//") else {
+            throw ModelDownloadError.unsafePath(filename)
+        }
+
+        // Decode percent-encoded sequences to block encoded traversals (e.g. %2e%2e or %2f)
+        let decoded = trimmed.removingPercentEncoding ?? trimmed
+        guard !decoded.contains(".."),
+              !decoded.contains("\\"),
+              !decoded.contains("\0"),
+              !decoded.hasPrefix("/"),
+              !decoded.hasPrefix("~") else {
+            throw ModelDownloadError.unsafePath(filename)
+        }
+
+        // Validate each component (permitting legitimate subfolder hierarchies within the repository)
+        let components = trimmed.split(separator: "/", omittingEmptySubsequences: false)
+        for component in components {
+            let part = String(component).trimmingCharacters(in: .whitespaces)
+            guard !part.isEmpty,
+                  part != ".",
+                  part != "..",
+                  !part.hasPrefix("."),
+                  !part.contains("..") else {
+                throw ModelDownloadError.unsafePath(filename)
+            }
         }
     }
 
@@ -707,7 +747,19 @@ public actor ModelDownloadManager: ModelDownloadManagerProtocol {
               !trimmed.contains(".."),
               !trimmed.hasPrefix("/"),
               !trimmed.hasPrefix("."),
+              !trimmed.hasPrefix("~"),
+              !trimmed.contains("\\"),
+              !trimmed.contains("\0"),
               trimmed.contains("/") else {
+            throw ModelDownloadError.unsafePath(repoId)
+        }
+
+        let decoded = repoId.removingPercentEncoding ?? repoId
+        guard !decoded.contains(".."),
+              !decoded.contains("\\"),
+              !decoded.contains("\0"),
+              !decoded.hasPrefix("/"),
+              !decoded.hasPrefix("~") else {
             throw ModelDownloadError.unsafePath(repoId)
         }
     }

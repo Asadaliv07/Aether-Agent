@@ -38,7 +38,7 @@ public actor AgentOrchestrator {
     public init(
         registry: ToolRegistry,
         securityGuard: ToolSecurityGuard? = nil,
-        maxSteps: Int = 5
+        maxSteps: Int = 10
     ) {
         self.registry = registry
         self.securityGuard = securityGuard ?? registry.securityGuard
@@ -52,131 +52,56 @@ public actor AgentOrchestrator {
         let toolsDocumentation = await registry.formatToolsForPrompt(style: .xmlTags)
 
         let base = baseSystemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let prefix = base.isEmpty ? "You are Aether, an intelligent, privacy-first personal AI assistant engineered natively for Apple Silicon." : base
+        let prefix = base.isEmpty ? "You are Aether, an intelligent personal AI assistant." : base
 
         return """
         \(prefix)
 
-        You have access to the following local agent tools:
+        Available tools:
         \(toolsDocumentation)
 
         TOOL USAGE RULES:
-        1. When you need information to answer a user's question, call an available tool.
-        2. To invoke a tool, enclose the thought process in <thought>...</thought> and the tool invocation in <tool_call>...</tool_call>.
-        Example format:
-        <thought>
-        I need to inspect the system hardware specifications.
-        </thought>
+        1. When you need information or external actions, call an available tool.
+        2. To invoke a tool:
+        XML format:
+        <thought>Reasoning</thought>
         <tool_call>
-        <name>system_info</name>
+        <name>create_folder</name>
         <parameters>
+          <path>Desktop/AetherTest</path>
         </parameters>
         </tool_call>
 
-        3. When a tool has parameters:
+        JSON format:
+        <thought>Reasoning</thought>
         <tool_call>
-        <name>calculator</name>
-        <parameters>
-        <expression>(15 * 4) + 12</expression>
-        </parameters>
+        {"name": "create_folder", "arguments": {"path": "Desktop/AetherTest"}}
         </tool_call>
 
-        4. After receiving a <tool_response>, analyze the result and provide a clear, helpful response to the user.
-        5. If you do not need any tools, respond directly to the user without emitting <tool_call>.
+        CRITICAL PARAMETER RULES:
+        - NEVER use generic <param> or <parameter> tags. Parameter XML tags MUST match the exact parameter name (e.g. <path>Desktop/AetherTest</path>).
+        - NEVER use placeholder paths like '/path/to/new/folder' or 'path/to/...'. Always provide the real requested destination path.
+        - If a required parameter is missing or ambiguous, ask the user for clarification instead of calling a tool with invented values.
+        3. Never claim you cannot interact with the filesystem when tools are available. Always call the corresponding tool.
+        4. If you do not need any tools, respond directly to the user without emitting <tool_call>.
         """
     }
 
     // MARK: - Tool Call Parsing
 
     /// Deterministically extracts `<thought>` and `<tool_call>` blocks from generated text.
-    public static func parseToolCall(from text: String) -> ToolCallInvocation? {
-        // 1. Extract thought if present
-        var thought: String? = nil
-        if let thoughtStart = text.range(of: "<thought>"),
-           let thoughtEnd = text.range(of: "</thought>", range: thoughtStart.upperBound..<text.endIndex) {
-            thought = String(text[thoughtStart.upperBound..<thoughtEnd.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        // 2. Extract <tool_call>...</tool_call>
-        guard let callStart = text.range(of: "<tool_call>"),
-              let callEnd = text.range(of: "</tool_call>", range: callStart.upperBound..<text.endIndex) else {
-            return parseJSONToolCall(from: text, thought: thought)
-        }
-
-        let body = String(text[callStart.upperBound..<callEnd.lowerBound])
-
-        // Extract <name>...</name>
-        guard let nameStart = body.range(of: "<name>"),
-              let nameEnd = body.range(of: "</name>", range: nameStart.upperBound..<body.endIndex) else {
+    public static func parseToolCall(from text: String, availableTools: [ToolDefinition] = []) -> ToolCallInvocation? {
+        let (thought, action) = ProductionAgentInferenceProvider.parseModelOutput(from: text, availableTools: availableTools)
+        switch action {
+        case .callTool(let toolName, let parameters, _):
+            return ToolCallInvocation(toolName: toolName, parameters: parameters, rawThought: thought)
+        case .requestConfirmation(let toolName, let parameters, _):
+            return ToolCallInvocation(toolName: toolName, parameters: parameters, rawThought: thought)
+        default:
             return nil
         }
-        let toolName = String(body[nameStart.upperBound..<nameEnd.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Extract parameters inside <parameters>...</parameters>
-        var params: [String: String] = [:]
-        if let paramBlockStart = body.range(of: "<parameters>"),
-           let paramBlockEnd = body.range(of: "</parameters>", range: paramBlockStart.upperBound..<body.endIndex) {
-            let paramSection = String(body[paramBlockStart.upperBound..<paramBlockEnd.lowerBound])
-            params = parseXMLTags(from: paramSection)
-        }
-
-        return ToolCallInvocation(toolName: toolName, parameters: params, rawThought: thought)
     }
 
-    private static func parseXMLTags(from text: String) -> [String: String] {
-        var results: [String: String] = [:]
-        var scanner = text
-
-        while let openStart = scanner.range(of: "<") {
-            let rest = scanner[openStart.upperBound...]
-            guard let openEnd = rest.range(of: ">") else { break }
-            let tagName = String(rest[..<openEnd.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-
-            // Ignore parameter tags with attributes or comments
-            let cleanTag = tagName.components(separatedBy: .whitespaces).first ?? tagName
-            guard !cleanTag.isEmpty, !cleanTag.hasPrefix("/") else {
-                scanner = String(rest[openEnd.upperBound...])
-                continue
-            }
-
-            let closeTag = "</\(cleanTag)>"
-            let afterOpen = rest[openEnd.upperBound...]
-            guard let closeRange = afterOpen.range(of: closeTag) else {
-                scanner = String(afterOpen)
-                continue
-            }
-
-            let value = String(afterOpen[..<closeRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-            results[cleanTag] = value
-            scanner = String(afterOpen[closeRange.upperBound...])
-        }
-
-        return results
-    }
-
-    private static func parseJSONToolCall(from text: String, thought: String?) -> ToolCallInvocation? {
-        // Fallback for models emitting markdown JSON blocks: ```json { "name": "tool", "parameters": { ... } } ```
-        guard let jsonBlockStart = text.range(of: "```json"),
-              let jsonBlockEnd = text.range(of: "```", range: jsonBlockStart.upperBound..<text.endIndex) else {
-            return nil
-        }
-
-        let jsonString = String(text[jsonBlockStart.upperBound..<jsonBlockEnd.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let data = jsonString.data(using: .utf8),
-              let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let name = (dict["name"] as? String) ?? (dict["tool"] as? String) else {
-            return nil
-        }
-
-        var params: [String: String] = [:]
-        if let pDict = dict["parameters"] as? [String: Any] {
-            for (k, v) in pDict {
-                params[k] = "\(v)"
-            }
-        }
-
-        return ToolCallInvocation(toolName: name, parameters: params, rawThought: thought)
-    }
 
     // MARK: - Format Tool Response Back to Model
 
@@ -191,7 +116,7 @@ public actor AgentOrchestrator {
         """
     }
 
-    // MARK: - Multi-Step Execution Session
+    // MARK: - Single Step Tool Execution (Backward-Compatible Interface)
 
     /// Executes a single step of tool dispatch, evaluating permissions and delegating to the registry.
     public func executeToolStep(
@@ -236,5 +161,236 @@ public actor AgentOrchestrator {
             return (.denied(reason: reason), res)
         }
     }
-}
 
+    // MARK: - Multi-Step Execution Loop Integration (Sub-Phase 1.1)
+
+    /// Creates an actor-isolated cyclic execution loop initialized with the given goal and inference provider.
+    public func createExecutionLoop(
+        goal: String,
+        conversationId: UUID,
+        inferenceProvider: AgentInferenceProvider,
+        maxSteps: Int? = nil,
+        timeoutSeconds: Double = 30.0
+    ) -> AgentExecutionLoopActor {
+        let initialState = AgentState(
+            sessionId: UUID(),
+            conversationId: conversationId,
+            phase: .idle,
+            stepIndex: 0,
+            maxSteps: maxSteps ?? self.maxSteps,
+            goal: goal
+        )
+
+        return AgentExecutionLoopActor(
+            initialState: initialState,
+            registry: self.registry,
+            securityGuard: self.securityGuard,
+            inferenceProvider: inferenceProvider,
+            maxSteps: maxSteps ?? self.maxSteps,
+            toolTimeoutSeconds: timeoutSeconds
+        )
+    }
+
+    /// Convenience runner that executes an end-to-end multi-step agent loop.
+    public func runLoop(
+        goal: String,
+        conversationId: UUID,
+        inferenceProvider: AgentInferenceProvider,
+        maxSteps: Int? = nil
+    ) async -> AgentState {
+        let loop = createExecutionLoop(
+            goal: goal,
+            conversationId: conversationId,
+            inferenceProvider: inferenceProvider,
+            maxSteps: maxSteps
+        )
+        return await loop.run()
+    }
+
+    // MARK: - Multi-Step Production Reasoning Engine (Sub-Phase 1.2)
+
+    /// Deterministically parses model thoughts and actions supporting `<thought>`, `<tool_call>`,
+    /// `<final_answer>`, `<action>`, and `<confirm_tool>` tags.
+    public static func parseAction(from text: String, availableTools: [ToolDefinition] = []) -> (thought: String?, action: AgentAction) {
+        return ProductionAgentInferenceProvider.parseModelOutput(from: text, availableTools: availableTools)
+    }
+
+    /// Creates a production cyclic execution loop wired to `ProductionAgentInferenceProvider`,
+    /// `InferenceService`, and `AgentCyclicController`.
+    public func createProductionLoop(
+        goal: String,
+        conversationId: UUID,
+        inferenceService: InferenceService,
+        modelArchitecture: String? = nil,
+        configuration: GenerationConfiguration? = nil,
+        maxSteps: Int? = nil,
+        timeoutSeconds: Double = 30.0,
+        cyclicController: AgentCyclicController = AgentCyclicController()
+    ) -> AgentExecutionLoopActor {
+        let provider = ProductionAgentInferenceProvider(
+            inferenceService: inferenceService,
+            cyclicController: cyclicController,
+            configuration: configuration ?? GenerationConfiguration(
+                contextLength: 8192,
+                maxTokens: 512,
+                temperature: 0.1,
+                topK: 40,
+                topP: 0.95
+            ),
+            modelArchitecture: modelArchitecture
+        )
+
+        return createExecutionLoop(
+            goal: goal,
+            conversationId: conversationId,
+            inferenceProvider: provider,
+            maxSteps: maxSteps,
+            timeoutSeconds: timeoutSeconds
+        )
+    }
+
+    /// Convenience runner executing a full production cyclic reasoning session with local LLM inference.
+    public func runProductionLoop(
+        goal: String,
+        conversationId: UUID,
+        inferenceService: InferenceService,
+        modelArchitecture: String? = nil,
+        configuration: GenerationConfiguration? = nil,
+        maxSteps: Int? = nil,
+        timeoutSeconds: Double = 30.0,
+        cyclicController: AgentCyclicController = AgentCyclicController()
+    ) async -> AgentState {
+        let loop = createProductionLoop(
+            goal: goal,
+            conversationId: conversationId,
+            inferenceService: inferenceService,
+            modelArchitecture: modelArchitecture,
+            configuration: configuration,
+            maxSteps: maxSteps,
+            timeoutSeconds: timeoutSeconds,
+            cyclicController: cyclicController
+        )
+        return await loop.run()
+    }
+
+    // MARK: - Multi-Agent Framework Integration
+
+    /// Lazily initialized MultiAgentSupervisor
+    private var _multiAgentSupervisor: MultiAgentSupervisor?
+
+    public func getOrCreateMultiAgentSupervisor() async throws -> MultiAgentSupervisor {
+        if let existing = _multiAgentSupervisor {
+            return existing
+        }
+        let supervisor = try await MultiAgentSupervisor.createWithSubprocess(
+            securityGuard: self.securityGuard,
+            toolRegistry: self.registry
+        )
+        self._multiAgentSupervisor = supervisor
+        return supervisor
+    }
+
+    public func setMultiAgentSupervisor(_ supervisor: MultiAgentSupervisor) {
+        self._multiAgentSupervisor = supervisor
+    }
+
+    /// Executes a sequential multi-agent workflow delegating to the Python sidecar.
+    public func runMultiAgentSequential(
+        goal: String,
+        roles: [AgentRoleType] = [.planner, .coder, .reviewer],
+        sessionId: String = UUID().uuidString,
+        timeoutSeconds: Double = 60.0,
+        cancellationSignal: CancellationSignal? = nil
+    ) async throws -> MultiAgentWorkflowResult {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.executeSequential(
+            goal: goal,
+            roles: roles,
+            sessionId: sessionId,
+            timeoutSeconds: timeoutSeconds,
+            cancellationSignal: cancellationSignal
+        )
+    }
+
+    /// Executes a parallel fan-out/fan-in multi-agent workflow delegating to the Python sidecar.
+    public func runMultiAgentParallel(
+        goal: String,
+        plannerRole: AgentRoleType = .planner,
+        parallelRoles: [AgentRoleType] = [.researcher, .coder],
+        reviewerRole: AgentRoleType = .reviewer,
+        sessionId: String = UUID().uuidString,
+        timeoutSeconds: Double = 60.0,
+        cancellationSignal: CancellationSignal? = nil
+    ) async throws -> MultiAgentWorkflowResult {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.executeParallel(
+            goal: goal,
+            plannerRole: plannerRole,
+            parallelRoles: parallelRoles,
+            reviewerRole: reviewerRole,
+            sessionId: sessionId,
+            timeoutSeconds: timeoutSeconds,
+            cancellationSignal: cancellationSignal
+        )
+    }
+
+    /// Executes an agent handoff workflow delegating to the Python sidecar.
+    public func runMultiAgentHandoff(
+        goal: String,
+        triageRole: AgentRoleType = .supervisor,
+        targetRole: AgentRoleType = .coder,
+        sessionId: String = UUID().uuidString,
+        timeoutSeconds: Double = 60.0,
+        cancellationSignal: CancellationSignal? = nil
+    ) async throws -> MultiAgentWorkflowResult {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.executeHandoff(
+            goal: goal,
+            triageRole: triageRole,
+            targetRole: targetRole,
+            sessionId: sessionId,
+            timeoutSeconds: timeoutSeconds,
+            cancellationSignal: cancellationSignal
+        )
+    }
+
+    /// Invokes a single Microsoft Agent Framework specialist directly.
+    public func invokeSingleAgent(
+        agentRole: String,
+        input: String,
+        sessionId: String = UUID().uuidString,
+        timeoutSeconds: Double = 60.0
+    ) async throws -> AgentInvocationResult {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.invokeAgent(
+            agentRole: agentRole,
+            input: input,
+            sessionId: sessionId,
+            timeoutSeconds: timeoutSeconds
+        )
+    }
+
+    /// Lists all agents discovered in the Microsoft Agent Framework registry.
+    public func listAvailableAgents(activeOnly: Bool = true) async throws -> [AgentMetadata] {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.listAgents(activeOnly: activeOnly)
+    }
+
+    /// Registers a custom specialist agent in the Microsoft Agent Framework registry.
+    public func registerCustomAgent(
+        name: String,
+        instructions: String,
+        description: String? = nil,
+        capabilities: [String] = [],
+        allowedTools: [String] = []
+    ) async throws -> AgentMetadata {
+        let supervisor = try await getOrCreateMultiAgentSupervisor()
+        return try await supervisor.registerAgent(
+            name: name,
+            instructions: instructions,
+            description: description,
+            capabilities: capabilities,
+            allowedTools: allowedTools
+        )
+    }
+}

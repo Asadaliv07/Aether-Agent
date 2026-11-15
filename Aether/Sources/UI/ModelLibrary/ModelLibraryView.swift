@@ -12,9 +12,11 @@ public struct ModelLibraryView: View {
     @State private var modelPendingRemoval: ModelRecord?
     @State private var modelForInspection: ModelRecord?
     @State private var modelForRemoteInspection: HuggingFaceModel?
+    @State private var selectedHubModelForDetail: ComprehensiveModelMetadata?
     @State private var showRemovalConfirmation: Bool = false
     @State private var showInspectionSheet: Bool = false
     @State private var showRemoteInspectionSheet: Bool = false
+    @State private var showHubDetailSheet: Bool = false
 
     private let quickArchitectures = ["All", "Llama", "Qwen", "Gemma", "Mistral", "Phi"]
     private let quickCategories: [(title: String, category: ModelCategory?)] = [
@@ -54,6 +56,8 @@ public struct ModelLibraryView: View {
 
                 // Tab Content
                 switch viewModel.selectedLibraryTab {
+                case .hub:
+                    aiModelHubContent
                 case .installed:
                     installedModelsContent
                 case .discover:
@@ -110,6 +114,29 @@ public struct ModelLibraryView: View {
                             }
                         },
                         isPresented: $showRemoteInspectionSheet
+                    )
+                }
+            }
+            .sheet(isPresented: $showHubDetailSheet) {
+                if let model = selectedHubModelForDetail {
+                    let isInstalled = isHubModelInstalled(model)
+                    ModelDetailSheet(
+                        model: model,
+                        isInstalled: isInstalled,
+                        activeDownloads: viewModel.activeDownloads,
+                        onDownloadVariant: { variant in
+                            Task {
+                                await viewModel.startHubModelDownload(model: model, variant: variant)
+                            }
+                        },
+                        onLoadModel: {
+                            if let rec = findInstalledRecord(for: model) {
+                                Task {
+                                    await viewModel.selectAndLoadModel(model: rec)
+                                }
+                            }
+                        },
+                        isPresented: $showHubDetailSheet
                     )
                 }
             }
@@ -651,6 +678,20 @@ public struct ModelLibraryView: View {
                 Text("\(viewModel.catalogModels.count) model\(viewModel.catalogModels.count == 1 ? "" : "s") registered")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            } else if viewModel.selectedLibraryTab == .hub {
+                HStack(spacing: 6) {
+                    Image(systemName: "cpu")
+                        .font(.caption2)
+                    Text(viewModel.deviceProfile.summaryDescription)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Text("\(viewModel.displayedHubModels.count) of \(ModelCatalogRegistry.models.count) verified models")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "network")
@@ -670,6 +711,209 @@ public struct ModelLibraryView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+    }
+
+    // MARK: - AI Model Hub Tab
+
+    @ViewBuilder
+    private var aiModelHubContent: some View {
+        VStack(spacing: 0) {
+            // Search & Filter Bar
+            VStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+
+                    TextField("Search 100+ models by name, architecture, family, or publisher...", text: $viewModel.hubSearchQuery)
+                        .textFieldStyle(.plain)
+
+                    if !viewModel.hubSearchQuery.isEmpty {
+                        Button(action: {
+                            viewModel.hubSearchQuery = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Divider()
+                        .frame(height: 16)
+
+                    // Family filter menu
+                    Menu {
+                        Button("All Families") {
+                            viewModel.updateHubFamily(nil)
+                        }
+                        Divider()
+                        ForEach(ModelCatalogRegistry.allFamilies, id: \.self) { fam in
+                            Button(action: {
+                                viewModel.updateHubFamily(fam)
+                            }) {
+                                HStack {
+                                    Text(fam)
+                                    if viewModel.selectedHubFamily == fam {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(viewModel.selectedHubFamily ?? "Family")
+                                .font(.caption)
+                            Image(systemName: "chevron.down")
+                                .font(.caption2)
+                        }
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+
+                    Divider()
+                        .frame(height: 16)
+
+                    // Sort menu
+                    Menu {
+                        ForEach(HubSortOption.allCases) { opt in
+                            Button(action: {
+                                viewModel.updateHubSort(opt)
+                            }) {
+                                HStack {
+                                    Label(opt.rawValue, systemImage: opt.iconName)
+                                    if viewModel.selectedHubSort == opt {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: viewModel.selectedHubSort.iconName)
+                                .font(.caption2)
+                            Text(viewModel.selectedHubSort.rawValue)
+                                .font(.caption)
+                        }
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+                // Category Pills (Horizontal ScrollView)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(HubCategory.allCases) { cat in
+                            Button(action: {
+                                viewModel.updateHubCategory(cat)
+                            }) {
+                                HStack(spacing: 5) {
+                                    Image(systemName: cat.iconName)
+                                        .font(.caption2)
+                                    Text(cat.rawValue)
+                                        .font(.caption)
+                                        .fontWeight(viewModel.selectedHubCategory == cat ? .semibold : .regular)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(
+                                    viewModel.selectedHubCategory == cat
+                                        ? Color.accentColor
+                                        : Color(nsColor: .controlBackgroundColor)
+                                )
+                                .foregroundStyle(
+                                    viewModel.selectedHubCategory == cat
+                                        ? Color.white
+                                        : Color.primary
+                                )
+                                .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 10)
+            .padding(.bottom, 8)
+
+            Divider()
+
+            // Models Grid
+            let hubModels = viewModel.displayedHubModels
+            if hubModels.isEmpty {
+                VStack(spacing: 12) {
+                    Spacer()
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("No Models Found")
+                        .font(.headline)
+                    Text("Try adjusting your search query, selecting 'All Models', or clearing the family filter.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("Reset Filters") {
+                        viewModel.hubSearchQuery = ""
+                        viewModel.selectedHubCategory = .all
+                        viewModel.selectedHubFamily = nil
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                ScrollView(.vertical) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 290, maximum: 420), spacing: 14)], spacing: 14) {
+                        ForEach(hubModels) { model in
+                            let isInstalled = isHubModelInstalled(model)
+                            ModelHubCardView(
+                                model: model,
+                                isInstalled: isInstalled,
+                                activeDownloads: viewModel.activeDownloads,
+                                onInspect: { inspected in
+                                    selectedHubModelForDetail = inspected
+                                    showHubDetailSheet = true
+                                },
+                                onDownloadVariant: { variant in
+                                    Task {
+                                        await viewModel.startHubModelDownload(model: model, variant: variant)
+                                    }
+                                },
+                                onLoadModel: {
+                                    if let rec = findInstalledRecord(for: model) {
+                                        Task {
+                                            await viewModel.selectAndLoadModel(model: rec)
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 14)
+                }
+            }
+        }
+    }
+
+    private func isHubModelInstalled(_ model: ComprehensiveModelMetadata) -> Bool {
+        viewModel.catalogModels.contains { rec in
+            rec.name == model.displayName ||
+            rec.filePath.contains(model.repositoryId) ||
+            model.availableQuantizations.contains { q in rec.filePath.hasSuffix(q.filename) }
+        }
+    }
+
+    private func findInstalledRecord(for model: ComprehensiveModelMetadata) -> ModelRecord? {
+        viewModel.catalogModels.first { rec in
+            rec.name == model.displayName ||
+            rec.filePath.contains(model.repositoryId) ||
+            model.availableQuantizations.contains { q in rec.filePath.hasSuffix(q.filename) }
+        }
     }
 
     // MARK: - Helpers

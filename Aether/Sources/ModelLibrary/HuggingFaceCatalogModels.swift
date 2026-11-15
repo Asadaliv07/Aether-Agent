@@ -580,12 +580,16 @@ public enum ModelCatalogNormalizer {
             }
         }
 
-        // Strip quantization tokens
+        // Strip quantization tokens (standard descriptors and bare suffixes like -q4, -q8, etc.)
+        var quantPatterns: [String] = []
         for q in HuggingFaceQuantUtils.quantBitDepths.keys {
-            let patterns = ["-\(q)", ".\(q)", "_\(q)", "-\(q.lowercased())", ".\(q.lowercased())", "_\(q.lowercased())"]
-            for pat in patterns {
-                clean = clean.replacingOccurrences(of: pat, with: "")
-            }
+            quantPatterns.append(contentsOf: ["-\(q)", ".\(q)", "_\(q)", "-\(q.lowercased())", ".\(q.lowercased())", "_\(q.lowercased())"])
+        }
+        for bare in ["q4", "q5", "q8", "q6", "q3", "q2", "fp16", "f16", "bf16"] {
+            quantPatterns.append(contentsOf: ["-\(bare)", ".\(bare)", "_\(bare)", "-\(bare.uppercased())", ".\(bare.uppercased())", "_\(bare.uppercased())"])
+        }
+        for pat in quantPatterns {
+            clean = clean.replacingOccurrences(of: pat, with: "")
         }
 
         // Replace -it or -IT with -Instruct
@@ -638,11 +642,18 @@ public enum ModelCatalogNormalizer {
             ("Gemma2", "Gemma 2"),
             ("Mistral-7B-", "Mistral 7B "),
             ("mistral-7b-", "Mistral 7B "),
-            ("Phi-3.5-", "Phi 3.5 "),
-            ("Phi-3-", "Phi 3 "),
-            ("Phi-4-", "Phi 4 "),
+            ("Phi-3.5-", "Phi-3.5 "),
+            ("phi-3.5-", "Phi-3.5 "),
+            ("Phi-3-", "Phi-3 "),
+            ("phi-3-", "Phi-3 "),
+            ("Phi-4-", "Phi-4 "),
+            ("phi-4-", "Phi-4 "),
             ("DeepSeek-R1-", "DeepSeek R1 "),
+            ("deepseek-r1-", "DeepSeek R1 "),
             ("DeepSeek-V3-", "DeepSeek V3 "),
+            ("deepseek-v3-", "DeepSeek V3 "),
+            ("DeepSeek-Coder-", "DeepSeek Coder "),
+            ("deepseek-coder-", "DeepSeek Coder "),
             ("SmolLM2-", "SmolLM 2 "),
             ("SmolLM-", "SmolLM ")
         ]
@@ -663,11 +674,36 @@ public enum ModelCatalogNormalizer {
             if lower == "llama" { return "Llama" }
             if lower == "gemma" { return "Gemma" }
             if lower == "mistral" { return "Mistral" }
+            if lower == "deepseek" { return "DeepSeek" }
+            if lower == "phi" { return "Phi" }
+            if lower == "mini" { return "Mini" }
             if lower == "instruct" { return "Instruct" }
             if lower == "coder" { return "Coder" }
             if lower == "chat" { return "Chat" }
             if lower == "base" { return "Base" }
             if lower == "distill" { return "Distill" }
+            if lower == "whisper" { return "Whisper" }
+            if lower == "turbo" { return "Turbo" }
+            if lower == "breeze" { return "Breeze" }
+            if lower == "tts" { return "TTS" }
+            if lower == "flux" { return "FLUX" }
+            if lower == "schnell" { return "Schnell" }
+            if lower == "dev" { return "Dev" }
+            if lower == "bge" { return "BGE" }
+            if lower == "nomic" { return "Nomic" }
+            if lower == "embed" { return "Embed" }
+            if lower == "large" { return "Large" }
+            if lower == "small" { return "Small" }
+            if lower == "medium" { return "Medium" }
+            if lower == "math" { return "Math" }
+            if lower == "4k" { return "4K" }
+            if lower == "8k" { return "8K" }
+            if lower == "16k" { return "16K" }
+            if lower == "32k" { return "32K" }
+            if lower == "128k" { return "128K" }
+            if lower.hasPrefix("v0.") || lower.hasPrefix("v1.") || lower.hasPrefix("v2.") || lower.hasPrefix("v3.") {
+                return "v" + str.dropFirst()
+            }
             if lower.hasPrefix("qwen") {
                 return "Qwen" + str.dropFirst(4)
             }
@@ -813,7 +849,14 @@ public enum ModelCatalogNormalizer {
 
     public static func normalize(installedName: String, filePath: String, architecture: String) -> String {
         let filename = (filePath as NSString).lastPathComponent
-        let candidate = installedName.contains(".gguf") ? filename : installedName
+        let baseInstalled = (installedName as NSString).deletingPathExtension
+        let baseFile = (filename as NSString).deletingPathExtension
+        let candidate: String
+        if baseInstalled.count >= baseFile.count && !baseInstalled.isEmpty && baseInstalled.lowercased() != "model" {
+            candidate = installedName
+        } else {
+            candidate = filename
+        }
         let scale = extractParameterScale(from: "\(installedName) \(filename)")
         let variant = extractModelVariant(name: candidate)
 
@@ -832,6 +875,11 @@ public enum ModelCatalogNormalizer {
             parameterScale: scale,
             variant: variant
         )
+    }
+
+    /// Convenience wrapper to clean and normalize a raw model name or filename.
+    public static func cleanModelName(from raw: String) -> String {
+        normalize(installedName: raw, filePath: raw, architecture: "")
     }
 }
 

@@ -15,10 +15,14 @@
 | **Native Apple Silicon Inference** | `llama.xcframework` + Metal Performance Shaders | Zero-cloud, 100% local token streaming |
 | **Hugging Face Model Manager** | `HuggingFaceCatalogService`, `ModelDownloadManager` | In-app search, quantization tiers, background downloads |
 | **Agent Reasoning Engine** | `AgentOrchestrator.swift` | Visible `<thought>` process & collapsible reasoning UI |
-| **Tool Execution Engine** | `ToolRegistry.swift`, `Tool.swift` | Safe recursive descent arithmetic, Darwin hardware metrics |
+| **Tool Execution Engine** | `ToolRegistry.swift`, `Tool.swift` | Safe recursive descent arithmetic, Darwin hardware metrics (in-process MCP-compatible schema) |
 | **Security & Human-in-the-Loop** | `ToolSecurityGuard.swift`, `ChatView.swift` | Interactive continuation modal (`ToolConfirmationDialog`) |
 | **Prompt Injection & Path Defense**| `ToolSecurityGuard.detectPromptInjection` | Rejection of traversal (`..`) and jailbreak overrides |
 | **Audit Trail & Observability** | `ToolAuditLogger.swift` | Redacted in-memory telemetry, structured `os.Logger` |
+
+> [!NOTE]
+> **Architecture Clarification on Tool Protocols & MCP:**
+> Aether uses an in-process, protocol-oriented Swift tool execution engine whose tool declarations export standard JSON Schema definitions (`toJSONSchema()`). This mirrors the schema standard used by Anthropic MCP and OpenAI tool calling, while running safely inside macOS App Sandbox boundaries without requiring external subprocess daemons. External MCP JSON-RPC subprocess bridging is scheduled for Phase 5.
 
 ---
 
@@ -125,6 +129,18 @@
 
 ---
 
+## Potential Recording Pitfalls & Live Mitigations
+
+| Scene | Potential Failure Mode | Root Cause | Live Presenter Mitigation |
+| :--- | :--- | :--- | :--- |
+| **Scene 3** | Download takes too long | Network bandwidth constraint | **Pre-download** `Qwen2.5-Coder-1.5B-Instruct-Q4_K_M.gguf` before starting the recording. Use the UI to show the completed download state and click "Load". |
+| **Scene 4** | Model output format variation | Small local models occasionally omit `<thought>` tags | If the model responds in plain text, ask a more explicit reasoning prompt: *"Think step-by-step in <thought> tags before answering: Why is the sky blue?"* |
+| **Scene 5** | Model calculates directly instead of calling tool | Prompt too simple | Use explicit calculation prompts: *"Use the safe_calculator tool to compute the exact value of 14.5 cubed times pi."* |
+| **Scene 6** | `sandboxed_file_reader` returns File Not Found | Target file does not exist | **Prerequisite:** Run `echo "Aether Phase 4 Architecture Verification" > /Users/Shared/notes.txt` before recording. |
+| **Scene 7** | Console logs not showing | Subsystem filter typo | Filter Console.app strictly by `subsystem: com.aether.agent` or search string `[ToolAudit]`. |
+
+---
+
 ## Presenter Preparation Checklist
 
 Before recording:
@@ -132,3 +148,4 @@ Before recording:
 2. **Test File:** Create a sample text file at `/Users/Shared/notes.txt` with sample project notes.
 3. **Display Settings:** Set display resolution to 1920x1080 (1080p) or 2560x1440 for clean recording with visible UI fonts.
 4. **Clean macOS Environment:** Hide desktop icons, enable 'Do Not Disturb', and close background apps.
+

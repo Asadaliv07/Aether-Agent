@@ -89,6 +89,8 @@ public actor ConversationDatabase {
             if let handle { sqlite3_close_v2(handle) }
             throw DatabaseError.connectionFailed(msg)
         }
+        // Configure 5000ms busy handler for concurrent access safety
+        sqlite3_busy_timeout(handle, 5000)
         return handle
     }
 
@@ -108,10 +110,11 @@ public actor ConversationDatabase {
     }
 
     private static func configureAndMigrate(handle: OpaquePointer) throws {
-        // Enforce WAL mode, foreign keys, and safe synchronization
+        // Enforce WAL mode, foreign keys, busy timeout, and safe synchronization
         try executeRaw(db: handle, sql: "PRAGMA journal_mode = WAL;")
         try executeRaw(db: handle, sql: "PRAGMA foreign_keys = ON;")
         try executeRaw(db: handle, sql: "PRAGMA synchronous = NORMAL;")
+        try executeRaw(db: handle, sql: "PRAGMA busy_timeout = 5000;")
 
         // Migration tracking table
         try executeRaw(db: handle, sql: """
@@ -897,6 +900,24 @@ public actor ConversationDatabase {
         }
     }
 
+    public func updateModelName(id: UUID, name: String) throws {
+        guard let db else { throw DatabaseError.connectionFailed("Database is closed.") }
+        let sql = "UPDATE models SET name = ? WHERE id = ?;"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            throw DatabaseError.executionFailed(code: sqlite3_errcode(db), message: String(cString: sqlite3_errmsg(db)))
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        sqlite3_bind_text(stmt, 1, name, -1, SQLITE_TRANSIENT)
+        sqlite3_bind_text(stmt, 2, id.uuidString, -1, SQLITE_TRANSIENT)
+
+        let status = sqlite3_step(stmt)
+        guard status == SQLITE_DONE else {
+            throw DatabaseError.executionFailed(code: status, message: String(cString: sqlite3_errmsg(db)))
+        }
+    }
+
     public func deleteModel(id: UUID) throws {
         guard let db else { throw DatabaseError.connectionFailed("Database is closed.") }
         let sql = "DELETE FROM models WHERE id = ?;"
@@ -1015,6 +1036,23 @@ public actor ConversationDatabase {
         sqlite3_bind_text(stmt, 2, status.rawValue, -1, SQLITE_TRANSIENT)
         sqlite3_bind_int(stmt, 3, Int32(tokenCount))
         sqlite3_bind_text(stmt, 4, id.uuidString, -1, SQLITE_TRANSIENT)
+
+        let res = sqlite3_step(stmt)
+        guard res == SQLITE_DONE else {
+            throw DatabaseError.executionFailed(code: res, message: String(cString: sqlite3_errmsg(db)))
+        }
+    }
+
+    public func deleteMessage(id: UUID) throws {
+        guard let db else { throw DatabaseError.connectionFailed("Database is closed.") }
+        let sql = "DELETE FROM messages WHERE id = ?;"
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
+            throw DatabaseError.executionFailed(code: sqlite3_errcode(db), message: String(cString: sqlite3_errmsg(db)))
+        }
+        defer { sqlite3_finalize(stmt) }
+
+        sqlite3_bind_text(stmt, 1, id.uuidString, -1, SQLITE_TRANSIENT)
 
         let res = sqlite3_step(stmt)
         guard res == SQLITE_DONE else {

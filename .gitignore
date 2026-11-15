@@ -19,6 +19,7 @@ xcuserdata/
 
 # Reference repositories (external clones audited locally)
 reference-repos/
+IMPLEMENTATION-REPOS/
 
 # Model weights, datasets, and checkpoints (GGUF, safetensors, etc.)
 *.gguf
@@ -44,4 +45,13 @@ reference-repos/
 dist/
 *.dmg
 *.dmg.sha256
+
+# Python Sidecar Runtimes & Cache
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
 

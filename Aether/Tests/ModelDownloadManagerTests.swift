@@ -26,10 +26,13 @@ final class ModelDownloadManagerTests: XCTestCase {
     // MARK: - Path Traversal & Filename Safety Tests
 
     func testSafeFilenameValidation() throws {
-        // Valid GGUF filenames
+        // Valid GGUF filenames (flat and repository subpaths)
         XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("qwen2.5-coder-7b-instruct-q4_k_m.gguf"))
         XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("meta-llama-3-8b.Q8_0.gguf"))
         XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("Mistral-7B-v0.1.GGUF"))
+        XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("subdir/model.gguf"))
+        XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("Breeze-TTS-2-GGUF/breeze-tts-2-q4_0.gguf"))
+        XCTAssertNoThrow(try ModelDownloadManager.validateSafeFilename("deep/nested/subfolder/model.gguf"))
 
         // Invalid extensions
         XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("model.bin")) { error in
@@ -41,16 +44,34 @@ final class ModelDownloadManagerTests: XCTestCase {
         XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("script.sh")) { error in
             XCTAssertEqual(error as? ModelDownloadError, .invalidFilename("script.sh"))
         }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("subdir/model.bin")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .invalidFilename("subdir/model.bin"))
+        }
 
         // Path traversal attempts
         XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("../evil.gguf")) { error in
             XCTAssertEqual(error as? ModelDownloadError, .unsafePath("../evil.gguf"))
         }
-        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("subdir/model.gguf")) { error in
-            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("subdir/model.gguf"))
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("subdir/../evil.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("subdir/../evil.gguf"))
         }
         XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("/absolute/path.gguf")) { error in
             XCTAssertEqual(error as? ModelDownloadError, .unsafePath("/absolute/path.gguf"))
+        }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("~/Library/model.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("~/Library/model.gguf"))
+        }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("subdir/.hidden/model.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("subdir/.hidden/model.gguf"))
+        }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("subdir//model.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("subdir//model.gguf"))
+        }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("%2e%2e/evil.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("%2e%2e/evil.gguf"))
+        }
+        XCTAssertThrowsError(try ModelDownloadManager.validateSafeFilename("C:\\windows\\model.gguf")) { error in
+            XCTAssertEqual(error as? ModelDownloadError, .unsafePath("C:\\windows\\model.gguf"))
         }
     }
 

@@ -4,8 +4,9 @@ import os
 
 /// Segmented tabs for the native Model Library sheet.
 public enum ModelLibraryTab: String, CaseIterable, Identifiable, Sendable {
+    case hub = "AI Model Hub"
     case installed = "Installed Models"
-    case discover = "Discover Hugging Face"
+    case discover = "Hugging Face Live"
 
     public var id: String { rawValue }
 }
@@ -38,6 +39,10 @@ public final class ChatViewModel {
     public var selectedModelId: UUID?
     public private(set) var loadedModelId: UUID?
     public private(set) var errorMessage: String?
+
+    public func clearError() {
+        self.errorMessage = nil
+    }
 
     // MARK: - Generation Controls & Metrics
     public var currentSystemPrompt: String = ""
@@ -76,18 +81,60 @@ public final class ChatViewModel {
     }
 
     public private(set) var activeDownloads: [UUID: DownloadProgress] = [:]
-    public var selectedLibraryTab: ModelLibraryTab = .installed
+    public var selectedLibraryTab: ModelLibraryTab = .hub
     public private(set) var repoMetadataLoading: Set<String> = []
     public private(set) var repoMetadataErrors: [String: String] = [:]
 
+    // MARK: - Comprehensive AI Model Hub State
+    public var selectedHubCategory: HubCategory = .all
+    public var selectedHubSort: HubSortOption = .mostPopular
+    public var selectedHubFamily: String? = nil
+    public var selectedHubPublisher: String? = nil
+    public var selectedHubEngine: SupportedInferenceEngine? = nil
+    public var hubSearchQuery: String = ""
+    public private(set) var deviceProfile: DeviceCapabilityProfile = DeviceCapabilityEngine.getProfile()
+    public private(set) var remoteHubModels: [ComprehensiveModelMetadata] = []
+
+    /// Filtered and sorted models adhering to active Hub category, query, filters, and device capabilities.
+    public var displayedHubModels: [ComprehensiveModelMetadata] {
+        let installedRepos = Set(catalogModels.compactMap { m -> String? in
+            for reg in ModelCatalogRegistry.models {
+                if m.filePath.contains(reg.repositoryId) || m.name == reg.displayName {
+                    return reg.repositoryId
+                }
+            }
+            return nil
+        })
+
+        return ModelCatalogSearchEngine.shared.filterModels(
+            category: selectedHubCategory,
+            query: hubSearchQuery.isEmpty ? remoteSearchQuery : hubSearchQuery,
+            selectedFamily: selectedHubFamily,
+            selectedPublisher: selectedHubPublisher,
+            selectedEngine: selectedHubEngine,
+            onlyLocallyNative: false,
+            sort: selectedHubSort,
+            installedRepoIds: installedRepos,
+            additionalRemoteModels: remoteHubModels,
+            profile: deviceProfile
+        )
+    }
+
     // MARK: - Agent Mode & Tool Execution State
     public var isAgentModeEnabled: Bool = true
+    public var isMultiAgentModeEnabled: Bool = false
+    public var selectedWorkflowType: String = "sequential"
+    public private(set) var activeWorkflowStatus: String?
+    public private(set) var discoveredAgents: [AgentMetadata] = []
     public private(set) var pendingConfirmationRequest: ToolConfirmationRequest?
     public private(set) var activeToolExecutionName: String?
     public private(set) var lastToolExecutionResult: ToolExecutionResult?
 
     public let toolRegistry: ToolRegistry
     public let agentOrchestrator: AgentOrchestrator
+    public let authorizedDirectoryManager: AuthorizedDirectoryManager
+    private var mcpFilesystemServer: MCPFilesystemServer?
+    private var mcpClient: MCPClient?
     private var pendingToolContinuation: CheckedContinuation<Bool, Never>?
 
     // MARK: - Dependencies & Private Trackers
@@ -113,7 +160,8 @@ public final class ChatViewModel {
         catalogService: HuggingFaceCatalogServiceProtocol? = nil,
         downloadManager: ModelDownloadManager? = nil,
         toolRegistry: ToolRegistry? = nil,
-        agentOrchestrator: AgentOrchestrator? = nil
+        agentOrchestrator: AgentOrchestrator? = nil,
+        authorizedDirectoryManager: AuthorizedDirectoryManager? = nil
     ) {
         self.inferenceService = inferenceService
         self.database = database
@@ -121,6 +169,7 @@ public final class ChatViewModel {
         self.modelLibraryService = libService
         self.catalogService = catalogService ?? HuggingFaceCatalogService()
         self.downloadManager = downloadManager ?? ModelDownloadManager(database: database, modelLibraryService: libService)
+        self.authorizedDirectoryManager = authorizedDirectoryManager ?? AuthorizedDirectoryManager()
 
         let reg = toolRegistry ?? ToolRegistry()
         self.toolRegistry = reg
@@ -153,15 +202,79 @@ public final class ChatViewModel {
             }
         }
 
-        // 5. Register native agent tools
-        await toolRegistry.register(SystemInfoTool())
-        await toolRegistry.register(SafeCalculatorTool())
-        await toolRegistry.register(SandboxedFileReaderTool(securityGuard: toolRegistry.securityGuard))
-        await toolRegistry.register(DocumentTextExtractorTool(securityGuard: toolRegistry.securityGuard))
-        await toolRegistry.register(SystemNotificationTool())
+        // 5. Register all default tools across Native, Application, Browser, and Desktop suites
+        await toolRegistry.registerAllDefaultTools(directoryManager: authorizedDirectoryManager)
 
-        // 6. Start state observer
+        // 6. Connect and register MCP Filesystem Server tools
+        await setupMCPFilesystemTools()
+
+        // 7. Load and refresh authorized filesystem directories
+        await refreshAuthorizedDirectories()
+
+        // 8. Start state observer
         await setupStateObserver()
+    }
+
+    // MARK: - Filesystem Permissions Management
+
+    public private(set) var authorizedDirectories: [AuthorizedDirectoryInfo] = []
+
+    public func refreshAuthorizedDirectories() async {
+        self.authorizedDirectories = await authorizedDirectoryManager.listAuthorizedDirectoryInfos()
+    }
+
+    public func authorizeDirectory(url: URL, isReadOnly: Bool = false) async throws {
+        try await authorizedDirectoryManager.authorizeDirectory(url: url, isReadOnly: isReadOnly)
+        await refreshAuthorizedDirectories()
+    }
+
+    public func authorizeCommonDirectory(_ dir: FileManager.SearchPathDirectory) async throws {
+        try await authorizedDirectoryManager.authorizeCommonDirectory(dir)
+        await refreshAuthorizedDirectories()
+    }
+
+    public func revokeDirectory(url: URL) async {
+        await authorizedDirectoryManager.revokeDirectory(url: url)
+        await refreshAuthorizedDirectories()
+    }
+
+    public func toggleReadOnly(url: URL) async {
+        await authorizedDirectoryManager.toggleReadOnly(for: url)
+        await refreshAuthorizedDirectories()
+    }
+
+    public func promptAndAuthorizeDirectory() async throws {
+        #if canImport(AppKit)
+        if let url = DirectoryPicker.pickDirectory() {
+            try await authorizeDirectory(url: url)
+        }
+        #endif
+    }
+
+    /// Sets up the in-memory MCP Filesystem Server and registers all official filesystem tools.
+    public func setupMCPFilesystemTools() async {
+        await toolRegistry.securityGuard.setDirectoryManager(authorizedDirectoryManager)
+
+        let server = MCPFilesystemServer(directoryManager: authorizedDirectoryManager)
+        self.mcpFilesystemServer = server
+
+        let (clientTransport, serverTransport) = MCPInMemoryTransport.createPair()
+        await server.start(transport: serverTransport)
+
+        let client = MCPClient()
+        await client.connect(transport: clientTransport)
+        self.mcpClient = client
+
+        do {
+            _ = try await client.initialize(clientInfo: MCPImplementation(name: "AetherChatClient", version: "1.0.0"))
+            let mcpTools = try await client.listTools()
+            for mcpTool in mcpTools {
+                let adapter = MCPToolAdapter(mcpTool: mcpTool, client: client)
+                await toolRegistry.register(adapter)
+            }
+        } catch {
+            print("[ChatViewModel] Failed to initialize MCP filesystem tools: \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Agent Tool Confirmation Handling
@@ -316,6 +429,31 @@ public final class ChatViewModel {
         }
     }
 
+    public func renameConversation(id: UUID, newTitle: String) async {
+        let trimmed = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        do {
+            try await database.updateConversationTitle(id: id, title: trimmed)
+            if let idx = conversations.firstIndex(where: { $0.id == id }) {
+                let current = conversations[idx]
+                conversations[idx] = ConversationRecord(
+                    id: current.id,
+                    title: trimmed,
+                    createdAt: current.createdAt,
+                    updatedAt: Date(),
+                    modelName: current.modelName,
+                    systemPrompt: current.systemPrompt,
+                    temperature: current.temperature,
+                    maxTokens: current.maxTokens,
+                    stopSequences: current.stopSequences
+                )
+            }
+        } catch {
+            self.errorMessage = "Failed to rename conversation: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Search Operations
 
     /// Schedules an asynchronous debounced search query.
@@ -461,6 +599,54 @@ public final class ChatViewModel {
             return
         }
 
+        // 2b. Dispatch to Microsoft Agent Framework if multi-agent mode is enabled
+        if isMultiAgentModeEnabled {
+            self.isGenerating = true
+            self.activeGenerationConversationId = conversationId
+            self.activeWorkflowStatus = "Initializing Microsoft Agent Framework..."
+
+            do {
+                let result: MultiAgentWorkflowResult
+                if selectedWorkflowType == "parallel" {
+                    self.activeWorkflowStatus = "Running MAF Parallel Workflow..."
+                    result = try await agentOrchestrator.runMultiAgentParallel(
+                        goal: trimmed,
+                        sessionId: conversationId.uuidString
+                    )
+                } else if selectedWorkflowType == "handoff" {
+                    self.activeWorkflowStatus = "Running MAF Agent Handoff..."
+                    result = try await agentOrchestrator.runMultiAgentHandoff(
+                        goal: trimmed,
+                        sessionId: conversationId.uuidString
+                    )
+                } else {
+                    self.activeWorkflowStatus = "Running MAF Sequential Workflow..."
+                    result = try await agentOrchestrator.runMultiAgentSequential(
+                        goal: trimmed,
+                        sessionId: conversationId.uuidString
+                    )
+                }
+
+                let finalContent = result.isSuccess ? result.finalAnswer : "Microsoft Agent Framework error: \(result.error ?? "Workflow failed")"
+                if let idx = self.messages.firstIndex(where: { $0.id == assistantMessageId }) {
+                    self.messages[idx].content = finalContent
+                    self.messages[idx].status = result.isSuccess ? .completed : .failed
+                }
+                try? await database.updateMessageContentAndStatus(id: assistantMessageId, content: finalContent, status: result.isSuccess ? .completed : .failed, tokenCount: 0)
+            } catch {
+                let errText = "Microsoft Agent Framework error: \(error.localizedDescription)"
+                if let idx = self.messages.firstIndex(where: { $0.id == assistantMessageId }) {
+                    self.messages[idx].content = errText
+                    self.messages[idx].status = .failed
+                }
+                try? await database.updateMessageContentAndStatus(id: assistantMessageId, content: errText, status: .failed, tokenCount: 0)
+            }
+            self.activeWorkflowStatus = nil
+            self.isGenerating = false
+            self.activeGenerationConversationId = nil
+            return
+        }
+
         // 3. Assemble multi-turn conversation context
         var promptMessages: [PromptMessage] = []
         let currentConv = conversations.first(where: { $0.id == conversationId })
@@ -512,6 +698,13 @@ public final class ChatViewModel {
 
         // 4. Configure generation parameters
         var config = GenerationConfiguration.default
+        if case .loaded(let modelInfo) = inferenceState {
+            let safeContext = min(max(modelInfo.contextLength, 8192), 16384)
+            config.contextLength = UInt32(safeContext)
+        }
+        if isAgentModeEnabled {
+            config.contextLength = max(config.contextLength, 8192)
+        }
         if let temp = currentConv?.temperature {
             config.temperature = temp
         }
@@ -522,30 +715,147 @@ public final class ChatViewModel {
             config.stopSequences = stops
         }
 
-        // 5. Initiate inference stream
-        self.isGenerating = true
-        self.activeGenerationConversationId = conversationId
+        // 5. Initiate inference stream and generation loop
+        await executeInferenceGeneration(
+            conversationId: conversationId,
+            assistantMessageId: assistantMessageId,
+            promptMessages: promptMessages,
+            config: config
+        )
+    }
 
-        let stream: InferenceStream
-        let startTime = ContinuousClock.now
-        do {
-            stream = try await inferenceService.generate(messages: promptMessages, configuration: config)
-            self.activeStream = stream
-        } catch {
-            self.isGenerating = false
-            self.activeGenerationConversationId = nil
-            self.activeStream = nil
-            self.markAssistantMessageFailed(id: assistantMessageId, errorDescription: error.localizedDescription)
-            try? await database.updateMessageContentAndStatus(
-                id: assistantMessageId,
-                content: "Generation error: \(error.localizedDescription)",
-                status: .failed,
-                tokenCount: 0
-            )
+    /// Regenerates the response for a specified assistant message, or the last assistant message.
+    public func regenerateResponse(for messageId: UUID? = nil) async {
+        guard !isGenerating else { return }
+
+        guard case .loaded = inferenceState else {
+            self.errorMessage = "Please load a local model before generating responses."
             return
         }
 
-        // 6. Stream consumption loop with incremental persistence
+        guard let conversationId = selectedConversationId else { return }
+
+        // Identify target assistant message
+        let targetId: UUID
+        if let messageId = messageId {
+            targetId = messageId
+        } else if let lastAssistant = messages.last(where: { $0.role == .assistant }) {
+            targetId = lastAssistant.id
+        } else {
+            return
+        }
+
+        // Delete the previous assistant message
+        try? await database.deleteMessage(id: targetId)
+        self.messages.removeAll(where: { $0.id == targetId })
+
+        guard let lastMsg = self.messages.last else { return }
+
+        // Create new assistant placeholder
+        let newAssistantId = UUID()
+        let assistantMessage = ChatMessage(
+            id: newAssistantId,
+            conversationId: conversationId,
+            role: .assistant,
+            content: "",
+            status: .streaming
+        )
+        self.messages.append(assistantMessage)
+
+        do {
+            try await database.insertMessage(assistantMessage.toRecord())
+        } catch {
+            self.errorMessage = "Failed to record assistant stream: \(error.localizedDescription)"
+            return
+        }
+
+        // Assemble multi-turn context
+        var promptMessages: [PromptMessage] = []
+        let currentConv = conversations.first(where: { $0.id == conversationId })
+        var effectiveSystemPrompt: String? = currentConv?.systemPrompt
+        if isAgentModeEnabled {
+            effectiveSystemPrompt = await agentOrchestrator.buildSystemPrompt(baseSystemPrompt: effectiveSystemPrompt)
+        }
+        if let sysPrompt = effectiveSystemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !sysPrompt.isEmpty {
+            promptMessages.append(PromptMessage(role: .system, content: sysPrompt))
+        }
+
+        do {
+            let priorRecords = try await database.fetchMessages(for: conversationId)
+            for record in priorRecords {
+                if record.id == newAssistantId { continue }
+                if record.role == .assistant {
+                    guard record.status == .completed,
+                          !record.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        continue
+                    }
+                    promptMessages.append(PromptMessage(role: .assistant, content: record.content))
+                } else if record.role == .user {
+                    promptMessages.append(PromptMessage(role: .user, content: record.content))
+                } else if record.role == .system {
+                    promptMessages.append(PromptMessage(role: .system, content: record.content))
+                }
+            }
+        } catch {
+            for msg in self.messages {
+                if msg.id == newAssistantId { continue }
+                if msg.role == .assistant {
+                    guard msg.status == .completed,
+                          !msg.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                        continue
+                    }
+                    promptMessages.append(PromptMessage(role: .assistant, content: msg.content))
+                } else if msg.role == .user {
+                    promptMessages.append(PromptMessage(role: .user, content: msg.content))
+                }
+            }
+        }
+
+        if promptMessages.isEmpty || promptMessages.last?.role != MessageRole.user.rawValue {
+            promptMessages.append(PromptMessage(role: .user, content: lastMsg.content))
+        }
+
+        var config = GenerationConfiguration.default
+        if case .loaded(let modelInfo) = inferenceState {
+            let safeContext = min(max(modelInfo.contextLength, 8192), 16384)
+            config.contextLength = UInt32(safeContext)
+        }
+        if isAgentModeEnabled {
+            config.contextLength = max(config.contextLength, 8192)
+        }
+        if let temp = currentConv?.temperature {
+            config.temperature = temp
+        }
+        if let maxTok = currentConv?.maxTokens {
+            config.maxTokens = maxTok
+        }
+        if let stops = currentConv?.stopSequences {
+            config.stopSequences = stops
+        }
+
+        await executeInferenceGeneration(
+            conversationId: conversationId,
+            assistantMessageId: newAssistantId,
+            promptMessages: promptMessages,
+            config: config
+        )
+    }
+
+    private func executeInferenceGeneration(
+        conversationId: UUID,
+        assistantMessageId: UUID,
+        promptMessages: [PromptMessage],
+        config: GenerationConfiguration
+    ) async {
+        self.isGenerating = true
+        self.activeGenerationConversationId = conversationId
+
+        let startTime = ContinuousClock.now
+        let stream = await inferenceService.generate(messages: promptMessages, configuration: config)
+        self.activeStream = stream
+
+        // Stream consumption loop with incremental persistence
         var accumulatedText = ""
         var tokenCount = 0
         var tokensSinceLastSave = 0
@@ -631,7 +941,7 @@ public final class ChatViewModel {
             }
         }
 
-        // 7. Check if Assistant output requested a Tool Call
+        // Check if Assistant output requested a Tool Call
         if isAgentModeEnabled, let invocation = AgentOrchestrator.parseToolCall(from: accumulatedText) {
             await handleAgentToolExecution(
                 invocation: invocation,
@@ -1021,6 +1331,7 @@ public final class ChatViewModel {
                 limit: 20
             )
             self.huggingFaceModels = results
+            self.remoteHubModels = results.map { ModelCatalogSearchEngine.convert(remoteModel: $0) }
             self.isSearchingRemoteCatalog = false
 
             // Asynchronously enrich models with missing sizes without blocking the UI
@@ -1082,6 +1393,59 @@ public final class ChatViewModel {
     public func updateRemoteSortOrder(_ sort: HuggingFaceSortOrder) async {
         self.selectedRemoteSortOrder = sort
         await searchRemoteCatalog()
+    }
+
+    public func updateHubCategory(_ category: HubCategory) {
+        self.selectedHubCategory = category
+    }
+
+    public func updateHubSort(_ sort: HubSortOption) {
+        self.selectedHubSort = sort
+    }
+
+    public func updateHubFamily(_ family: String?) {
+        self.selectedHubFamily = family
+    }
+
+    public func updateHubPublisher(_ publisher: String?) {
+        self.selectedHubPublisher = publisher
+    }
+
+    public func updateHubEngine(_ engine: SupportedInferenceEngine?) {
+        self.selectedHubEngine = engine
+    }
+
+    public func updateHubSearchQuery(_ query: String) {
+        self.hubSearchQuery = query
+        self.remoteSearchQuery = query
+        remoteCatalogSearchTask?.cancel()
+        remoteCatalogSearchTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled, let self else { return }
+            await self.searchRemoteCatalog()
+        }
+    }
+
+    public func startHubModelDownload(model: ComprehensiveModelMetadata, variant: ModelQuantizationVariant? = nil) async {
+        self.errorMessage = nil
+        let targetVariant = variant ?? model.availableQuantizations.first
+        guard let chosen = targetVariant else {
+            self.errorMessage = "No downloadable variant found for \(model.displayName)"
+            return
+        }
+
+        do {
+            _ = try await downloadManager.startDownload(
+                repoId: model.repositoryId,
+                filename: chosen.filename,
+                downloadURL: chosen.downloadURL,
+                expectedSize: chosen.size
+            )
+            await refreshDownloads()
+            startDownloadPollingIfNeeded()
+        } catch {
+            self.errorMessage = "Failed to start download: \(error.localizedDescription)"
+        }
     }
 
     public func startModelDownload(model: HuggingFaceModel, file: HuggingFaceGGUFFile) async {
@@ -1167,5 +1531,20 @@ public final class ChatViewModel {
             guard let self else { return }
             self.downloadPollingTask = nil
         }
+    }
+
+    // MARK: - Microsoft Agent Framework Operations
+
+    public func loadDiscoveredAgents() async {
+        do {
+            self.discoveredAgents = try await agentOrchestrator.listAvailableAgents()
+        } catch {
+            self.errorMessage = "Failed to discover MAF agents: \(error.localizedDescription)"
+        }
+    }
+
+    public func invokeSingleSpecialist(role: String, prompt: String) async throws -> String {
+        let res = try await agentOrchestrator.invokeSingleAgent(agentRole: role, input: prompt)
+        return res.output
     }
 }

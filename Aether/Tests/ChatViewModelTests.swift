@@ -124,6 +124,7 @@ final class ChatViewModelTests: XCTestCase {
         self.worker = MockChatWorker()
         self.inferenceService = InferenceService(worker: worker)
         self.viewModel = ChatViewModel(inferenceService: inferenceService, database: database)
+        self.viewModel.isAgentModeEnabled = false
     }
 
     override func tearDown() async throws {
@@ -956,6 +957,67 @@ final class ChatViewModelTests: XCTestCase {
         XCTAssertFalse(vm.repoMetadataLoading.contains("test/model-error"))
         XCTAssertNotNil(vm.repoMetadataErrors["test/model-error"])
         XCTAssertTrue(vm.repoMetadataErrors["test/model-error"]?.contains("503") == true)
+    }
+
+    func testRenameConversation() async throws {
+        let vm = ChatViewModel(inferenceService: inferenceService, database: database)
+        vm.isAgentModeEnabled = false
+        await vm.initialize()
+        guard let convId = vm.selectedConversationId else {
+            XCTFail("Expected default conversation")
+            return
+        }
+
+        await vm.renameConversation(id: convId, newTitle: "Project Strategy Discussion")
+        let updated = vm.conversations.first(where: { $0.id == convId })
+        XCTAssertEqual(updated?.title, "Project Strategy Discussion")
+
+        let record = try await database.fetchConversation(id: convId)
+        XCTAssertEqual(record?.title, "Project Strategy Discussion")
+    }
+
+    func testRegenerateResponse() async throws {
+        let vm = ChatViewModel(inferenceService: inferenceService, database: database)
+        vm.isAgentModeEnabled = false
+        await vm.initialize()
+        _ = try await inferenceService.loadModel(at: mockModelPath)
+        await vm.loadModel(path: mockModelPath)
+
+        vm.composerText = "What is the capital of France?"
+        await vm.sendMessage()
+
+        XCTAssertEqual(vm.messages.count, 2)
+        let firstAssistantMsg = vm.messages[1]
+        XCTAssertEqual(firstAssistantMsg.role, .assistant)
+
+        // Now regenerate
+        await vm.regenerateResponse(for: firstAssistantMsg.id)
+
+        XCTAssertEqual(vm.messages.count, 2)
+        let newAssistantMsg = vm.messages[1]
+        XCTAssertEqual(newAssistantMsg.role, .assistant)
+        XCTAssertNotEqual(newAssistantMsg.id, firstAssistantMsg.id)
+    }
+
+    func testDeleteMessageFromDatabase() async throws {
+        let conv = try await database.createConversation(title: "Test Delete Message")
+        let msgId = UUID()
+        let msg = MessageRecord(
+            id: msgId,
+            conversationId: conv.id,
+            role: .user,
+            content: "Temporary message",
+            createdAt: Date(),
+            status: .completed,
+            tokenCount: 2
+        )
+        try await database.insertMessage(msg)
+        var messages = try await database.fetchMessages(for: conv.id)
+        XCTAssertEqual(messages.count, 1)
+
+        try await database.deleteMessage(id: msgId)
+        messages = try await database.fetchMessages(for: conv.id)
+        XCTAssertEqual(messages.count, 0)
     }
 }
 

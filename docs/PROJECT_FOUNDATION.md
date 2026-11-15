@@ -183,7 +183,7 @@ Phase 4 advances the foundation into a fully capable local autonomous agent:
   - `ChatViewModel.swift`: Agent loop orchestration with interactive confirmation continuations.
   - `ChatView.swift`: Agent Mode toggle chip, active tool telemetry capsule, and `ToolConfirmationDialog` sheet.
   - `MessageBubbleView.swift`: Decomposed thought disclosures, tool invocation cards, and result viewers.
-- **Verification**: 239 automated unit & integration tests passing across all components.
+- **Verification**: 251 automated unit & integration tests passing across all components.
 
 ---
 

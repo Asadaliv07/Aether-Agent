@@ -8,11 +8,14 @@
 	<!-- Outgoing network connections for Hugging Face catalog search and model downloading -->
 	<key>com.apple.security.network.client</key>
 	<true/>
-	<!-- Access to user-selected external model files via NSOpenPanel -->
-	<key>com.apple.security.files.user-selected.read-only</key>
+	<!-- Access to user-selected external model files and authorized directories via NSOpenPanel -->
+	<key>com.apple.security.files.user-selected.read-write</key>
 	<true/>
 	<!-- Persistent security-scoped bookmark creation and resolution across launches -->
 	<key>com.apple.security.files.bookmarks.app-scope</key>
+	<true/>
+	<!-- Allow loading embedded llama.xcframework under hardened runtime with ad-hoc signing -->
+	<key>com.apple.security.cs.disable-library-validation</key>
 	<true/>
 </dict>
 </plist>

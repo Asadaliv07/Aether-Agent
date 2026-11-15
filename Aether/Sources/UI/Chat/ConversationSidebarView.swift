@@ -5,10 +5,17 @@ import AppKit
 public struct ConversationSidebarView: View {
     @Bindable var viewModel: ChatViewModel
     @Binding var showSystemTelemetry: Bool
+    @Binding var showSettings: Bool
 
-    public init(viewModel: ChatViewModel, showSystemTelemetry: Binding<Bool>) {
+    @State private var conversationToDelete: ConversationRecord?
+    @State private var showDeleteConfirmation: Bool = false
+    @State private var conversationToRename: ConversationRecord?
+    @State private var showRenameSheet: Bool = false
+
+    public init(viewModel: ChatViewModel, showSystemTelemetry: Binding<Bool>, showSettings: Binding<Bool>) {
         self.viewModel = viewModel
         self._showSystemTelemetry = showSystemTelemetry
+        self._showSettings = showSettings
     }
 
     public var body: some View {
@@ -116,10 +123,13 @@ public struct ConversationSidebarView: View {
                             ConversationRowView(
                                 conversation: conv,
                                 isSelected: viewModel.selectedConversationId == conv.id,
+                                onRename: {
+                                    conversationToRename = conv
+                                    showRenameSheet = true
+                                },
                                 onDelete: {
-                                    Task {
-                                        await viewModel.deleteConversation(id: conv.id)
-                                    }
+                                    conversationToDelete = conv
+                                    showDeleteConfirmation = true
                                 }
                             )
                             .tag(conv.id)
@@ -135,6 +145,34 @@ public struct ConversationSidebarView: View {
             sidebarFooter
         }
         .frame(minWidth: 230, idealWidth: 260, maxWidth: 320)
+        .confirmationDialog(
+            "Delete Conversation '\(conversationToDelete?.title ?? "Chat")'?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible,
+            presenting: conversationToDelete
+        ) { conv in
+            Button("Delete Conversation", role: .destructive) {
+                Task {
+                    await viewModel.deleteConversation(id: conv.id)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("This conversation and all of its message history will be permanently deleted.")
+        }
+        .sheet(isPresented: $showRenameSheet) {
+            RenameConversationSheet(
+                conversation: conversationToRename,
+                isPresented: $showRenameSheet,
+                onSave: { newTitle in
+                    if let conv = conversationToRename {
+                        Task {
+                            await viewModel.renameConversation(id: conv.id, newTitle: newTitle)
+                        }
+                    }
+                }
+            )
+        }
     }
 
     // MARK: - Sidebar Footer
@@ -167,11 +205,21 @@ public struct ConversationSidebarView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             // Secondary controls
-            HStack {
+            HStack(spacing: 8) {
                 Button(action: {
                     viewModel.showModelLibrary = true
                 }) {
-                    Label("Model Library", systemImage: "cpu")
+                    Label("Models", systemImage: "cpu")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderless)
+
+                Spacer()
+
+                Button(action: {
+                    showSettings = true
+                }) {
+                    Label("Settings", systemImage: "gearshape")
                         .font(.caption)
                 }
                 .buttonStyle(.borderless)
@@ -181,7 +229,7 @@ public struct ConversationSidebarView: View {
                 Button(action: {
                     showSystemTelemetry.toggle()
                 }) {
-                    Label("System Info", systemImage: "info.circle")
+                    Label("System", systemImage: "waveform.path.ecg")
                         .font(.caption)
                 }
                 .buttonStyle(.borderless)
@@ -218,7 +266,10 @@ public struct ConversationSidebarView: View {
             return info.name
         case .loading:
             return "Loading Model..."
-        case .failed:
+        case .failed(let err):
+            if err.localizedCaseInsensitiveContains("bookmark") || err.localizedCaseInsensitiveContains("security") || err.localizedCaseInsensitiveContains("permission") || err.localizedCaseInsensitiveContains("access") {
+                return "Authorization Needed"
+            }
             return "Engine Error"
         case .unloaded:
             return "No Model Loaded"
@@ -237,6 +288,9 @@ public struct ConversationSidebarView: View {
         case .loading:
             return "Reading weights..."
         case .failed(let err):
+            if err.localizedCaseInsensitiveContains("bookmark") || err.localizedCaseInsensitiveContains("security") {
+                return "Authorization expired • Relink in Library"
+            }
             return err
         case .unloaded:
             return "Local Apple Silicon"
@@ -297,6 +351,7 @@ public struct ConversationSidebarView: View {
 private struct ConversationRowView: View {
     let conversation: ConversationRecord
     let isSelected: Bool
+    let onRename: () -> Void
     let onDelete: () -> Void
 
     var body: some View {
@@ -316,8 +371,62 @@ private struct ConversationRowView: View {
         }
         .padding(.vertical, 2)
         .contextMenu {
+            Button(action: onRename) {
+                Label("Rename Conversation...", systemImage: "pencil")
+            }
+
+            Divider()
+
             Button(role: .destructive, action: onDelete) {
-                Label("Delete Conversation", systemImage: "trash")
+                Label("Delete Conversation...", systemImage: "trash")
+            }
+        }
+    }
+}
+
+// MARK: - Rename Sheet
+
+private struct RenameConversationSheet: View {
+    let conversation: ConversationRecord?
+    @Binding var isPresented: Bool
+    let onSave: (String) -> Void
+
+    @State private var title: String = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 8) {
+                Image(systemName: "pencil.line")
+                    .font(.title3)
+                    .foregroundStyle(Color.accentColor)
+                Text("Rename Conversation")
+                    .font(.headline)
+            }
+
+            TextField("Conversation Title", text: $title)
+                .textFieldStyle(.roundedBorder)
+                .frame(minWidth: 280)
+
+            HStack {
+                Spacer()
+                Button("Cancel") {
+                    isPresented = false
+                }
+                .keyboardShortcut(.cancelAction)
+
+                Button("Save") {
+                    onSave(title)
+                    isPresented = false
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(20)
+        .onAppear {
+            if let c = conversation {
+                title = c.title
             }
         }
     }

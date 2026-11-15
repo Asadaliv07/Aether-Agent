@@ -17,17 +17,34 @@ public struct ContentView: View {
         NavigationSplitView {
             ConversationSidebarView(
                 viewModel: state.chatViewModel,
-                showSystemTelemetry: $showSystemTelemetry
+                showSystemTelemetry: $showSystemTelemetry,
+                showSettings: $state.showSettings
             )
         } detail: {
             ChatView(viewModel: state.chatViewModel)
         }
         .navigationSplitViewStyle(.balanced)
+        .preferredColorScheme(selectedColorScheme)
         .task {
             await state.chatViewModel.initialize()
         }
         .sheet(isPresented: $showSystemTelemetry) {
             SystemTelemetrySheet(state: state, isPresented: $showSystemTelemetry)
+        }
+        .sheet(isPresented: $state.showSettings) {
+            SettingsView(
+                settings: state.settings,
+                viewModel: state.chatViewModel,
+                isPresented: $state.showSettings
+            )
+        }
+    }
+
+    private var selectedColorScheme: ColorScheme? {
+        switch state.settings.appTheme {
+        case "light": return .light
+        case "dark": return .dark
+        default: return nil
         }
     }
 }
@@ -105,36 +122,46 @@ public struct SystemTelemetrySheet: View {
 
                     Divider()
 
-                    Text("Phase 3.5 Integration Status")
+                    Text("Offline Intelligence Architecture")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
 
                     VStack(spacing: 8) {
                         MilestoneRow(
-                            code: "M3.1",
-                            name: "Minimal Project Foundation",
-                            description: "SwiftUI native target, Swift 6 mode, App Sandbox",
+                            code: "ENGINE",
+                            name: "Inference Engine (Metal 3)",
+                            description: "Pinned llama.cpp with unified memory compute shaders and token streaming",
                             isComplete: true
                         )
 
                         MilestoneRow(
-                            code: "M3.4",
-                            name: "Inference Engine & Metal 3",
-                            description: "Pinned llama.cpp, actor-isolated worker, token streaming, cancellation",
+                            code: "STORAGE",
+                            name: "SQLite 3 WAL Persistence",
+                            description: "ACID transactional chat history, search indices, and download tracking",
                             isComplete: true
                         )
 
                         MilestoneRow(
-                            code: "M3.5",
-                            name: "Native Chat Interface & SQLite Persistence",
-                            description: "NavigationSplitView, WAL SQLite database, interrupted recovery",
+                            code: "AGENT",
+                            name: "Sandboxed Autonomous Agent",
+                            description: "Tool calling, safe calculator, system telemetry, and approval dialogs",
                             isComplete: true
                         )
                     }
                     .padding(12)
                     .background(Color(nsColor: .controlBackgroundColor))
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+                    HStack {
+                        Spacer()
+                        Button("Open Full Settings...") {
+                            isPresented = false
+                            state.showSettings = true
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    .padding(.top, 4)
                 }
                 .padding(20)
             }

@@ -49,16 +49,21 @@ public struct ModelInfo: Sendable, Equatable {
     /// The architecture or format description reported by llama.cpp.
     public let description: String
 
+    /// The native or trained context length in tokens reported by the model metadata.
+    public let contextLength: Int
+
     public init(
         path: String,
         name: String,
         sizeInBytes: Int64,
-        description: String
+        description: String,
+        contextLength: Int = 8192
     ) {
         self.path = path
         self.name = name
         self.sizeInBytes = sizeInBytes
         self.description = description
+        self.contextLength = contextLength
     }
 }
 

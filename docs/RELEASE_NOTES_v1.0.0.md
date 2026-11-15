@@ -4,7 +4,8 @@
 **Target Platform:** macOS 14.0+ (Sonoma, Sequoia)  
 **Supported Hardware:** Apple Silicon Macs (M1 / M2 / M3 / M4, arm64)  
 **Release Artifact:** `Aether-v1.0.0-arm64.dmg`  
-**SHA-256 Checksum:** `4a077eacb5e020c53660cffeac28f6954e4cb853c2e964bb1f37d9c4076d51ce`
+**Size:** `5,524,958 bytes` (5.27 MB)  
+**SHA-256 Checksum:** `e517acd785806f521cfa00dcd2862bcf7f0433d3c9554ec5031550a5bb4b8c15`
 
 ---
 
@@ -43,6 +44,14 @@ Aether v1.0.0 is an offline-first, private personal AI agent engineered natively
 - Integrated model browser supporting popular open-weight architectures (Qwen 2.5, Llama 3.2, Mistral).
 - Multi-tier quantization selection (Q4_K_M, Q8_0, etc.) with estimated RAM requirements.
 - Resilient background downloads with SHA-256 validation and security-scoped bookmark persistence.
+- Normalized human-readable model naming with developer badges, parameter tags, and status pills.
+
+### 6. Full Settings Hub & UI/UX Overhaul
+- **Dedicated 6-Tab Settings Hub (`⌘,`):** General, Model & Inference, Chat & Agent, Storage & Downloads, Diagnostics, and About.
+- **Persistent Preferences:** Backed by `AppSettings` with instant reactive UI updates and safe defaults.
+- **Rich Markdown & Syntax Styling:** Monospace code blocks with language headers and one-click clipboard copying.
+- **Conversation Management:** Safe deletion with confirmation modal, inline renaming, and message regeneration.
+- **Diagnostics & Telemetry:** Real-time Apple Silicon memory pressure tracking and diagnostic report JSON export.
 
 ---
 
@@ -54,13 +63,9 @@ Aether v1.0.0 is an offline-first, private personal AI agent engineered natively
 3. Drag the **Aether** app icon into the **Applications** folder shortcut.
 4. Eject the DMG.
 
-### Option 2: Gatekeeper First-Launch Verification (Ad-Hoc Signed Build)
-Because this capstone build is ad-hoc signed for open-source evaluation without a paid Apple Developer ID certificate:
-- **First Launch (GUI):** Right-click (or Control-click) `Aether.app` in `/Applications` and select **Open**, then click **Open** in the security confirmation dialog.
-- **First Launch (Terminal alternative):** If macOS Gatekeeper displays a quarantine prompt, remove the quarantine attribute:
-  ```bash
-  xattr -d com.apple.quarantine /Applications/Aether.app
-  ```
+### Gatekeeper Evaluation Instructions (Ad-Hoc Signed Build)
+Because this release is signed ad-hoc without an Apple Developer ID certificate or Apple notarization, macOS Gatekeeper will identify the package as being from an unidentified developer:
+- **Launching via Finder:** Right-click (or Control-click) `Aether.app` in `/Applications` and select **Open**, then click **Open** in the standard macOS security confirmation dialog. This adheres to Apple's recommended Gatekeeper review workflow without disabling system security controls.
 
 ---
 
@@ -81,4 +86,4 @@ Because this capstone build is ad-hoc signed for open-source evaluation without 
 - **Target OS:** macOS 14.0+
 - **Architecture:** `arm64` (Apple Silicon)
 - **App Sandbox:** Enabled (`com.apple.security.app-sandbox = true`)
-- **Automated Tests:** 239 passed / 0 failed (100% pass rate)
+- **Automated Tests:** 251 passed / 0 failed (100% pass rate across 15 test suites)

@@ -85,6 +85,10 @@ public struct SandboxedFileReaderTool: Tool {
     }
 
     public func execute(parameters: [String: String], context: ToolExecutionContext) async throws -> ToolExecutionResult {
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
+
         guard let rawPath = parameters["path"] else {
             return .failure(toolName: definition.name, error: "Missing required parameter 'path'.")
         }
@@ -100,6 +104,10 @@ public struct SandboxedFileReaderTool: Tool {
             return .denied(toolName: definition.name, reason: error.localizedDescription)
         }
 
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
+
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: sanitizedPath, isDirectory: &isDir) else {
             return .failure(toolName: definition.name, error: "File not found at path: \(sanitizedPath)")
@@ -113,6 +121,10 @@ public struct SandboxedFileReaderTool: Tool {
         if let attrs = try? FileManager.default.attributesOfItem(atPath: sanitizedPath),
            let fileSize = attrs[.size] as? Int64, fileSize > 10 * 1024 * 1024 {
             return .failure(toolName: definition.name, error: "File size exceeds 10MB limit (\(fileSize / (1024 * 1024))MB).")
+        }
+
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
         }
 
         // Read file contents
@@ -159,6 +171,10 @@ public struct DocumentTextExtractorTool: Tool {
     }
 
     public func execute(parameters: [String: String], context: ToolExecutionContext) async throws -> ToolExecutionResult {
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
+
         guard let rawPath = parameters["path"] else {
             return .failure(toolName: definition.name, error: "Missing required parameter 'path'.")
         }
@@ -170,8 +186,16 @@ public struct DocumentTextExtractorTool: Tool {
             return .denied(toolName: definition.name, reason: error.localizedDescription)
         }
 
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
+
         guard FileManager.default.fileExists(atPath: sanitizedPath) else {
             return .failure(toolName: definition.name, error: "Document not found at path: \(sanitizedPath)")
+        }
+
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
         }
 
         let fileURL = URL(fileURLWithPath: sanitizedPath)
@@ -460,6 +484,10 @@ public struct SystemNotificationTool: Tool {
     public init() {}
 
     public func execute(parameters: [String: String], context: ToolExecutionContext) async throws -> ToolExecutionResult {
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
+
         guard let title = parameters["title"], !title.isEmpty else {
             return .failure(toolName: definition.name, error: "Missing required parameter 'title'.")
         }
@@ -467,6 +495,10 @@ public struct SystemNotificationTool: Tool {
             return .failure(toolName: definition.name, error: "Missing required parameter 'body'.")
         }
         let subtitle = parameters["subtitle"]
+
+        if context.cancellationSignal?.isCancelled == true || Task.isCancelled {
+            return .cancelled(toolName: definition.name)
+        }
 
         let content = UNMutableNotificationContent()
         content.title = title
@@ -488,5 +520,47 @@ public struct SystemNotificationTool: Tool {
         } catch {
             return .failure(toolName: definition.name, error: "Failed to dispatch notification: \(error.localizedDescription)")
         }
+    }
+}
+
+// MARK: - 6. Current Date & Time Tool
+
+/// Safe, read-only tool providing current local time, UTC timestamp, timezone, and calendar details.
+public struct DateTimeTool: Tool {
+    public let definition = ToolDefinition(
+        name: "current_date_time",
+        description: "Returns the current local date, formatted time, UTC ISO-8601 timestamp, day of week, and active macOS timezone.",
+        parameters: [],
+        category: .systemInfo,
+        permissionLevel: .safeReadOnly
+    )
+
+    public init() {}
+
+    public func execute(parameters: [String: String], context: ToolExecutionContext) async throws -> ToolExecutionResult {
+        let now = Date()
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .full
+        formatter.locale = Locale.current
+        formatter.timeZone = TimeZone.current
+
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let localString = formatter.string(from: now)
+        let isoString = isoFormatter.string(from: now)
+        let tzName = TimeZone.current.identifier
+
+        let output = """
+        Local Date & Time: \(localString)
+        ISO-8601 Timestamp: \(isoString)
+        Timezone: \(tzName)
+        """
+
+        return .success(toolName: definition.name, output: output, metadata: [
+            "iso": isoString,
+            "timezone": tzName
+        ])
     }
 }

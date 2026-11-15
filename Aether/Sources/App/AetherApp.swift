@@ -5,6 +5,7 @@ import SwiftUI
 /// Configured for macOS 14.0+ using modern Swift 6 SwiftUI app lifecycle.
 @main
 struct AetherApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var appState = AppState()
 
     var body: some Scene {
@@ -16,6 +17,12 @@ struct AetherApp: App {
         .defaultSize(width: 860, height: 580)
         .commands {
             SidebarCommands()
+            CommandGroup(replacing: .appSettings) {
+                Button("Settings...") {
+                    appState.showSettings = true
+                }
+                .keyboardShortcut(",", modifiers: .command)
+            }
             CommandGroup(replacing: .appInfo) {
                 Button("About Aether") {
                     NSApplication.shared.orderFrontStandardAboutPanel(

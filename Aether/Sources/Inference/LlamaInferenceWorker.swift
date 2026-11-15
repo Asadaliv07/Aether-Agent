@@ -1,6 +1,9 @@
 import Foundation
 import os
 import llama
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// Concrete inference worker managing native `llama.cpp` resources on a dedicated serial execution context.
 ///
@@ -10,6 +13,10 @@ import llama
 /// No native pointer ever escapes across thread or queue boundaries.
 internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked Sendable {
     private let logger = Logger(subsystem: "com.aether.Aether", category: "LlamaInferenceWorker")
+
+    /// Global process-level lock and reference counter for native llama.cpp backend lifecycle.
+    private static let backendLock = NSLock()
+    nonisolated(unsafe) private static var activeBackendInstances: Int = 0
 
     /// Dedicated private serial queue for all native C calls and model state mutation.
     private let queue: DispatchQueue
@@ -37,10 +44,64 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
     /// Tracks whether the worker has been permanently shut down.
     private var isShutdown: Bool = false
 
+    private struct WeakWorkerRef {
+        weak var worker: LlamaInferenceWorker?
+        init(_ worker: LlamaInferenceWorker) {
+            self.worker = worker
+        }
+    }
+
+    private static let registryLock = NSLock()
+    nonisolated(unsafe) private static var activeWorkers: [WeakWorkerRef] = []
+    nonisolated(unsafe) private static var atexitRegistered: Bool = false
+
+    /// Forcefully shuts down all active native workers and deallocates Metal context/model resources.
+    /// This prevents SIGABRT in ggml_metal_rsets_free when the app exits or is terminated.
+    public static func shutdownAll() {
+        registryLock.lock()
+        let workers = activeWorkers.compactMap { $0.worker }
+        activeWorkers.removeAll()
+        registryLock.unlock()
+
+        for worker in workers {
+            worker.syncShutdownImmediate()
+        }
+    }
+
+    internal func syncShutdownImmediate() {
+        if DispatchQueue.getSpecific(key: queueKey) != nil {
+            self.syncShutdown()
+        } else {
+            self.queue.sync {
+                self.syncShutdown()
+            }
+        }
+    }
+
     public init(queueLabel: String = "com.aether.inference.worker") {
         let q = DispatchQueue(label: queueLabel, qos: .userInitiated)
         q.setSpecific(key: self.queueKey, value: ())
         self.queue = q
+
+        Self.registryLock.lock()
+        Self.activeWorkers.append(WeakWorkerRef(self))
+        if !Self.atexitRegistered {
+            Self.atexitRegistered = true
+            atexit {
+                LlamaInferenceWorker.shutdownAll()
+            }
+        }
+        Self.registryLock.unlock()
+
+        #if canImport(AppKit)
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification,
+            object: nil,
+            queue: nil
+        ) { _ in
+            LlamaInferenceWorker.shutdownAll()
+        }
+        #endif
     }
 
     #if DEBUG
@@ -49,6 +110,10 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
     #endif
 
     deinit {
+        Self.registryLock.lock()
+        Self.activeWorkers.removeAll(where: { $0.worker == nil || $0.worker === self })
+        Self.registryLock.unlock()
+
         // Ensure native resources are cleaned up deterministically upon deallocation in verified destruction order:
         // context -> model -> backend.
         let ctxPtr = self.context
@@ -67,7 +132,12 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
                 llama_model_free(ptr)
             }
             if wasBackendInit {
-                llama_backend_free()
+                Self.backendLock.lock()
+                Self.activeBackendInstances -= 1
+                if Self.activeBackendInstances == 0 {
+                    llama_backend_free()
+                }
+                Self.backendLock.unlock()
             }
         }
 
@@ -215,7 +285,13 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
             return
         }
 
-        llama_backend_init()
+        Self.backendLock.lock()
+        if Self.activeBackendInstances == 0 {
+            llama_backend_init()
+        }
+        Self.activeBackendInstances += 1
+        Self.backendLock.unlock()
+
         isBackendInitialized = true
     }
 
@@ -281,11 +357,14 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
         }
 
         let modelName = (path as NSString).lastPathComponent
+        let nCtxTrain = llama_model_n_ctx_train(loadedModel)
+        let effectiveCtx = nCtxTrain > 0 ? Int(nCtxTrain) : 8192
         let info = ModelInfo(
             path: path,
             name: modelName,
             sizeInBytes: fileSize,
-            description: descString
+            description: descString,
+            contextLength: effectiveCtx
         )
 
         self.model = loadedModel
@@ -335,7 +414,12 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
 
         // 3. Teardown native backend if initialized.
         if isBackendInitialized {
-            llama_backend_free()
+            Self.backendLock.lock()
+            Self.activeBackendInstances -= 1
+            if Self.activeBackendInstances == 0 {
+                llama_backend_free()
+            }
+            Self.backendLock.unlock()
             isBackendInitialized = false
         }
 
@@ -405,7 +489,9 @@ internal final class LlamaInferenceWorker: InferenceWorkerProtocol, @unchecked S
             var ctxParams = llama_context_default_params()
             ctxParams.n_ctx = configuration.contextLength
             ctxParams.n_batch = min(configuration.contextLength, 512)
-            let nThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
+            // Pin to high-performance cores on Apple Silicon to eliminate efficiency-core thread sync jitter
+            let perfCores = min(4, ProcessInfo.processInfo.processorCount)
+            let nThreads = max(1, perfCores)
             ctxParams.n_threads = Int32(nThreads)
             ctxParams.n_threads_batch = Int32(nThreads)
             ctxParams.no_perf = true

@@ -44,6 +44,8 @@ public enum ToolCategory: String, Sendable, Codable, CaseIterable, Equatable {
     case notification = "Notifications"
     case developer = "Developer & Diagnostics"
     case custom = "Custom Extensions"
+    case browser = "Browser Automation"
+    case desktopApp = "Desktop Application Automation"
 }
 
 /// The security classification and authorization requirement of a tool.
@@ -196,17 +198,23 @@ public struct ToolExecutionContext: Sendable {
     public let executionId: UUID
     public let timeoutSeconds: Double
     public let isInteractiveApprovalGranted: Bool
+    public let approvalToken: ApprovalToken?
+    public let cancellationSignal: CancellationSignal?
 
     public init(
         conversationId: UUID = UUID(),
         executionId: UUID = UUID(),
         timeoutSeconds: Double = 15.0,
-        isInteractiveApprovalGranted: Bool = false
+        isInteractiveApprovalGranted: Bool = false,
+        approvalToken: ApprovalToken? = nil,
+        cancellationSignal: CancellationSignal? = nil
     ) {
         self.conversationId = conversationId
         self.executionId = executionId
         self.timeoutSeconds = timeoutSeconds
         self.isInteractiveApprovalGranted = isInteractiveApprovalGranted
+        self.approvalToken = approvalToken
+        self.cancellationSignal = cancellationSignal
     }
 }
 

@@ -36,6 +36,8 @@ public final class AppState {
     public let inferenceService: InferenceService
     public let modelLibraryService: ModelLibraryService
     public let chatViewModel: ChatViewModel
+    public var settings: AppSettings = AppSettings.shared
+    public var showSettings: Bool = false
 
     public init() {
         let db: ConversationDatabase

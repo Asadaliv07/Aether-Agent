@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Platform-macOS%2014.0%2B%20(Sonoma%20%2F%20Sequoia)-blue.svg?style=flat-square" alt="Platform" />
   <img src="https://img.shields.io/badge/Architecture-Apple%20Silicon%20(arm64)-orange.svg?style=flat-square" alt="Architecture" />
   <img src="https://img.shields.io/badge/Swift-6.0-F05138.svg?style=flat-square" alt="Swift 6" />
-  <img src="https://img.shields.io/badge/Tests-239%20Passing%20(100%25)-brightgreen.svg?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-251%20Passing%20(100%25)-brightgreen.svg?style=flat-square" alt="Tests" />
   <img src="https://img.shields.io/badge/Inference-Local%20Metal%20Accelerated-purple.svg?style=flat-square" alt="Metal" />
   <img src="https://img.shields.io/badge/Release-v1.0.0--capstone-success.svg?style=flat-square" alt="Release" />
 </p>
@@ -135,13 +135,10 @@ flowchart TD
 ## Quick Start & Installation
 
 ### Option A: Install Pre-Built DMG (Recommended)
-1. Download **`Aether-v1.0.0-arm64.dmg`** from the [GitHub Releases](https://github.com/Asadaliv07/Aether-Agent/releases) page.
+1. Download **`Aether-v1.0.0-arm64.dmg`** (`e517acd785806f521cfa00dcd2862bcf7f0433d3c9554ec5031550a5bb4b8c15`) from the [GitHub Releases](https://github.com/Asadaliv07/Aether-Agent/releases) page.
 2. Double-click the DMG to mount it.
 3. Drag **Aether.app** into your `/Applications` directory.
-4. *Gatekeeper Verification:* On first launch, right-click `Aether.app` in Finder, select **Open**, and confirm. Alternatively, run:
-   ```bash
-   xattr -d com.apple.quarantine /Applications/Aether.app
-   ```
+4. *Gatekeeper Verification:* On first launch, right-click (or Control-click) `Aether.app` in Finder, select **Open**, and confirm the prompt. (Ad-hoc signed for open-source evaluation without an Apple Developer ID certificate).
 
 ### Option B: Build from Source
 
@@ -163,6 +160,21 @@ open build/DerivedData/Build/Products/Release/Aether.app
 
 ---
 
+## Microsoft Agent Framework (MAF) Integration
+
+Aether integrates the official **Microsoft Agent Framework (`agent-framework-core==1.24.0`)** as a first-class agent orchestration engine. Swift maintains application authority, Apple Silicon Metal inference, App Sandbox boundaries, and 3-tier tool authorization, while the sandboxed Python sidecar (`Aether/Resources/Sidecars/MultiAgent/`) coordinates multi-agent collaboration over asynchronous JSON-RPC 2.0.
+
+### Supported Orchestration Topologies
+- **Sequential Execution:** Sequential chains (`Planner → Coder → Reviewer`) passing structured outputs through step-by-step verification.
+- **Parallel Fan-Out / Fan-In:** Concurrent execution (`Planner → Parallel Specialists → ResultAggregator → Reviewer`).
+- **Dynamic Agent Handoffs:** Autonomous triage and domain delegation (`Supervisor → Specialist`).
+- **Durable Checkpoints:** MAF `FileCheckpointStorage` provides crash recovery on disk (`~/.aether/checkpoints`) surviving sidecar restarts.
+- **Enterprise Guardrails:** Official MAF middleware pipeline with prompt injection screening, credential scrubbers, and path traversal guards.
+
+For full architectural blueprints, RPC specifications, and operational workflows, refer to the [Microsoft Agent Framework Integration Guide](file:///Users/asadalishaikh/Aether%20Agent/docs/MAF_INTEGRATION_GUIDE.md).
+
+---
+
 ## Verification & Automated Testing
 
 Aether maintains an exhaustive automated test suite covering inference streaming, token stop-filtering, model download states, tool parameter validation, security traversal guards, and multi-step agent orchestration.
@@ -174,8 +186,8 @@ xcodebuild test -project Aether.xcodeproj -scheme Aether -destination 'platform=
 
 **Test Verification Summary:**
 ```text
-Test Suite 'AetherTests.xctest' passed at 2026-11-05 14:27:39.
-Executed 239 tests, with 0 failures (0 unexpected) in 34.059 seconds.
+Test Suite 'AetherTests.xctest' passed.
+Executed 251 tests, with 0 failures (0 unexpected) in 31.980 seconds.
 ** TEST SUCCEEDED **
 ```
 
@@ -185,11 +197,13 @@ Executed 239 tests, with 0 failures (0 unexpected) in 34.059 seconds.
 | `ToolSecurityGuardTests` | 6 | **PASS** | Permission tiers, path traversal sanitization, prompt injection |
 | `NativeToolsTests` | 6 | **PASS** | Calculator precedence, transcendental functions, system info, file bounds |
 | `AgentOrchestratorTests` | 5 | **PASS** | Thought parsing, tool call extraction, JSON fallback, observation formatting |
-| `InferenceServiceTests` | 12 | **PASS** | Context lifecycle, token generation, memory footprint |
+| `InferenceServiceTests` | 16 | **PASS** | Context lifecycle, token generation, memory footprint |
 | `StreamingStopFilterTests`| 15 | **PASS** | Multi-token stop sequence boundary handling |
-| `ChatViewModelTests` | 24 | **PASS** | Conversation state, agent loop transitions, approval continuations |
-| *Baseline Unit Tests* | 166 | **PASS** | Persistence, model catalog, download state machines |
-| **Total** | **239** | **PASS** | **100% Pass Rate** |
+| `ChatViewModelTests` | 27 | **PASS** | Conversation state, agent loop transitions, approval, regeneration, renaming |
+| `AppSettingsTests` | 5 | **PASS** | Settings persistence, reset defaults, cache clearance, storage safety |
+| `MessageMarkdownTests` | 4 | **PASS** | Markdown block parsing, code block fence detection, language tagging |
+| *Baseline Unit Tests* | 162 | **PASS** | Persistence, model catalog, download state machines |
+| **Total** | **251** | **PASS** | **100% Pass Rate across 15 Suites** |
 
 ---
 

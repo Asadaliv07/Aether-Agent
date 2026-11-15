@@ -257,7 +257,8 @@ public actor InferenceService {
     /// - Returns: An asynchronous stream of text chunks adhering to `InferenceStream`.
     public func generate(
         prompt: String,
-        configuration: GenerationConfiguration = .default
+        configuration: GenerationConfiguration = .default,
+        cancellationSignal: CancellationSignal? = nil
     ) -> InferenceStream {
         // 1. Synchronously validate actor state before mutating any properties or creating streams
         guard case .loaded(let modelInfo) = state else {
@@ -292,7 +293,7 @@ public actor InferenceService {
 
         // 2. Atomically reserve generation and set ownership token
         let generationId = UUID()
-        let signal = CancellationSignal()
+        let signal = cancellationSignal ?? CancellationSignal()
 
         self.activeGenerationId = generationId
         self.activeCancellationSignal = signal
@@ -393,7 +394,14 @@ public actor InferenceService {
 
             if mappedError != .cancelled {
                 if self.activeGenerationId == generationId {
-                    self.state = .failed(errorDescription: mappedError.localizedDescription)
+                    switch mappedError {
+                    case .contextExhausted, .invalidPrompt, .invalidConfiguration:
+                        // Prompt-level or context limit errors must not poison the loaded engine state.
+                        // Retain .loaded so the user can send a shorter prompt or continue chatting without reloading.
+                        self.state = .loaded(modelInfo: modelInfo)
+                    default:
+                        self.state = .failed(errorDescription: mappedError.localizedDescription)
+                    }
                 }
             }
             continuation.finish(throwing: mappedError)
@@ -412,7 +420,8 @@ public actor InferenceService {
     public func generate(
         messages: [PromptMessage],
         configuration: GenerationConfiguration = .default,
-        modelArchitecture: String? = nil
+        modelArchitecture: String? = nil,
+        cancellationSignal: CancellationSignal? = nil
     ) -> InferenceStream {
         // 1. Synchronously validate actor state before mutating any properties or creating streams
         guard case .loaded(let modelInfo) = state else {
@@ -446,7 +455,7 @@ public actor InferenceService {
 
         // 2. Atomically reserve generation and set ownership token
         let generationId = UUID()
-        let signal = CancellationSignal()
+        let signal = cancellationSignal ?? CancellationSignal()
 
         self.activeGenerationId = generationId
         self.activeCancellationSignal = signal
@@ -571,7 +580,14 @@ public actor InferenceService {
 
             if mappedError != .cancelled {
                 if self.activeGenerationId == generationId {
-                    self.state = .failed(errorDescription: mappedError.localizedDescription)
+                    switch mappedError {
+                    case .contextExhausted, .invalidPrompt, .invalidConfiguration:
+                        // Prompt-level or context limit errors must not poison the loaded engine state.
+                        // Retain .loaded so the user can send a shorter prompt or continue chatting without reloading.
+                        self.state = .loaded(modelInfo: modelInfo)
+                    default:
+                        self.state = .failed(errorDescription: mappedError.localizedDescription)
+                    }
                 }
             }
             continuation.finish(throwing: mappedError)

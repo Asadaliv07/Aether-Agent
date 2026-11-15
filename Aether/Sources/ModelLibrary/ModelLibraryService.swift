@@ -99,10 +99,43 @@ public actor ModelLibraryService {
                     model.compatibilityStatus = metadataReader.evaluateCompatibility(metadata: metadata, fileSize: fileSize)
                 }
             }
+
+            // Phase 3 & 11: Auto-heal display name if needed while preserving original file_path
+            let cleanTitle = ModelCatalogNormalizer.normalize(
+                installedName: model.name,
+                filePath: model.filePath,
+                architecture: model.architecture
+            )
+            if cleanTitle != model.name {
+                try? await database.updateModelName(id: model.id, name: cleanTitle)
+                model.name = cleanTitle
+            }
+
             resolvedModels.append(model)
         }
 
         return resolvedModels
+    }
+
+    /// Audits all registered models in the database and updates their display titles
+    /// to clean, human-readable names without modifying their underlying file paths or bookmarks.
+    @discardableResult
+    public func migrateAndNormalizeInstalledModelNames() async throws -> Int {
+        let models = try await database.fetchModels()
+        var updatedCount = 0
+        for model in models {
+            let clean = ModelCatalogNormalizer.normalize(
+                installedName: model.name,
+                filePath: model.filePath,
+                architecture: model.architecture
+            )
+            if clean != model.name {
+                try await database.updateModelName(id: model.id, name: clean)
+                logger.info("Migrated model display name from '\(model.name)' to '\(clean)' (ID: \(model.id))")
+                updatedCount += 1
+            }
+        }
+        return updatedCount
     }
 
     /// Fetches a specific model by ID from the catalog.
@@ -361,7 +394,18 @@ public actor ModelLibraryService {
                 relativeTo: nil,
                 bookmarkDataIsStale: &isStale
             ) else {
-                throw ModelLibraryError.unreadableFile("Could not resolve security-scoped bookmark for model '\(model.name)'.")
+                // If the bookmark is corrupt or expired across builds, check if the model exists in the app container
+                let filename = (model.filePath as NSString).lastPathComponent
+                if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+                    let containerModelURL = appSupport.appendingPathComponent("Aether/Models/\(filename)")
+                    if FileManager.default.fileExists(atPath: containerModelURL.path) {
+                        try? await database.updateModelLocation(id: id, filePath: containerModelURL.path, fileSize: model.fileSize, bookmarkData: nil)
+                        try? await database.updateModelLastUsed(id: id)
+                        logger.info("Auto-migrated model '\(model.name, privacy: .public)' to sandboxed container at '\(containerModelURL.path, privacy: .public)'")
+                        return containerModelURL.path
+                    }
+                }
+                throw ModelLibraryError.unreadableFile("Could not resolve security-scoped bookmark for model '\(model.name)'. Please relink or re-select the model file to grant access.")
             }
 
             // Start accessing security-scoped resource before attempting any filesystem access

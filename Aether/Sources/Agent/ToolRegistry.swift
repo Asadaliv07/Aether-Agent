@@ -22,6 +22,37 @@ public actor ToolRegistry {
         tools[tool.definition.name] = tool
     }
 
+    /// Registers multiple tools in the registry.
+    public func register(contentsOf toolsToRegister: [any Tool]) {
+        for tool in toolsToRegister {
+            tools[tool.definition.name] = tool
+        }
+    }
+
+    /// Registers all standard native, application, browser, and desktop automation tools in the registry.
+    public func registerAllDefaultTools(
+        directoryManager: AuthorizedDirectoryManager,
+        browserSession: BrowserSessionManager = .shared,
+        appSession: ApplicationSessionManager = .shared
+    ) {
+        // 1. Native utilities
+        register(SystemInfoTool())
+        register(DateTimeTool())
+        register(SafeCalculatorTool())
+        register(SandboxedFileReaderTool(securityGuard: securityGuard))
+        register(DocumentTextExtractorTool(securityGuard: securityGuard))
+        register(SystemNotificationTool())
+
+        // 2. Native macOS application tools
+        register(contentsOf: NativeApplicationTools.allTools(sessionManager: appSession, directoryManager: directoryManager))
+
+        // 3. Browser automation tools
+        register(contentsOf: BrowserAutomationTools.allTools(sessionManager: browserSession))
+
+        // 4. Desktop application automation tools
+        register(contentsOf: DesktopAutomationTools.allTools(sessionManager: appSession))
+    }
+
     /// Unregisters a tool by name.
     public func unregister(named name: String) {
         tools.removeValue(forKey: name)
@@ -58,21 +89,20 @@ public actor ToolRegistry {
         case .xmlTags:
             var output = "<tools>\n"
             for def in definitions {
-                output.append("  <tool>\n")
-                output.append("    <name>\(def.name)</name>\n")
-                output.append("    <description>\(def.description)</description>\n")
-                output.append("    <permission>\(def.permissionLevel.rawValue)</permission>\n")
-                output.append("    <parameters>\n")
-                for param in def.parameters {
-                    let req = param.isRequired ? "required" : "optional"
-                    var extra = ""
-                    if let allowed = param.allowedValues {
-                        extra = " [allowed: \(allowed.joined(separator: ", "))]"
+                output.append("<tool><name>\(def.name)</name><description>\(def.description)</description>")
+                if !def.parameters.isEmpty {
+                    output.append("<parameters>")
+                    for param in def.parameters {
+                        let req = param.isRequired ? "required" : "optional"
+                        var extra = ""
+                        if let allowed = param.allowedValues {
+                            extra = " [allowed: \(allowed.joined(separator: ", "))]"
+                        }
+                        output.append("<parameter name=\"\(param.name)\" type=\"\(param.type.rawValue)\" presence=\"\(req)\">\(param.description)\(extra)</parameter>")
                     }
-                    output.append("      <parameter name=\"\(param.name)\" type=\"\(param.type.rawValue)\" presence=\"\(req)\">\(param.description)\(extra)</parameter>\n")
+                    output.append("</parameters>")
                 }
-                output.append("    </parameters>\n")
-                output.append("  </tool>\n")
+                output.append("</tool>\n")
             }
             output.append("</tools>")
             return output
